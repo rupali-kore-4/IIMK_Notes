@@ -1,0 +1,286 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CMA Pattern Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky header with search, tabs (Map / Ladder / Calculators / Index); Map = grouped tiles that open a detail sheet */
+:root{--bg:#F5F7FA;--panel:#FFFFFF;--ink:#14213A;--mute:#5B6780;--line:#D5DCE7;
+--gA:#1F3A5F;--gB:#0F7C85;--gC:#A8620A;--gD:#2C7A43;--gE:#6B3F94;--tA:#E5ECF6;--tB:#DDF1F2;--tC:#FBEDD6;--tD:#E0F2E5;--tE:#EDE3F6;--sw:#B3261E;--swt:#FBE6E4;--hl:#FFE27A;
+--disp:'Space Grotesk','Segoe UI',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1524;--panel:#16203A;--ink:#E7ECF6;--mute:#9AA7C0;--line:#2A375A;
+--gA:#7FA6DB;--gB:#4CC4CD;--gC:#E8A24A;--gD:#6CCB86;--gE:#B993E0;--tA:#1B2B48;--tB:#12363B;--tC:#3A2A14;--tD:#173823;--tE:#2C2142;--sw:#FF8A80;--swt:#3B1B1B;--hl:#6B5A10;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1524;--panel:#16203A;--ink:#E7ECF6;--mute:#9AA7C0;--line:#2A375A;
+--gA:#7FA6DB;--gB:#4CC4CD;--gC:#E8A24A;--gD:#6CCB86;--gE:#B993E0;--tA:#1B2B48;--tB:#12363B;--tC:#3A2A14;--tD:#173823;--tE:#2C2142;--sw:#FF8A80;--swt:#3B1B1B;--hl:#6B5A10;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding:18px 0 10px}
+h1{font:700 26px/1.1 var(--disp);margin:0;text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:6px 0 0;max-width:70ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tab{font:600 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:6px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--gB);outline-offset:2px}
+.search{display:flex;gap:8px;align-items:center}
+.search input{flex:1;min-width:0;font:400 14px var(--body);padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font:500 12px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--mute);border-radius:99px;padding:3px 10px;cursor:pointer}
+.chip:hover{color:var(--ink);border-color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.gh{font:700 12px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+.gh i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);min-width:0;position:relative}
+.tile:hover{border-color:var(--ink)}
+.tile:focus-visible{outline:2px solid var(--gB);outline-offset:2px}
+.tile .top{display:flex;align-items:center;gap:8px}
+.badge{font:700 12px var(--mono);padding:2px 7px;border-radius:4px;color:#fff}
+.tile .nm{font:700 14px var(--disp);line-height:1.15}
+.tile .hook{font:400 12px/1.45 var(--mono);color:var(--ink);background:var(--bgt,var(--tA));padding:6px 8px;border-radius:5px;overflow-wrap:anywhere}
+.tile .tr{font-size:12px;color:var(--mute)}
+.tile.hit{outline:2px solid var(--hl);outline-offset:1px}
+.tile.dim{opacity:.28}
+.empty{color:var(--mute);padding:20px 0}
+/* sheet */
+dialog{border:0;padding:0;background:transparent;max-width:min(760px,calc(100vw - 24px));width:100%;color:var(--ink)}
+dialog::backdrop{background:rgba(8,14,28,.55)}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;max-height:calc(100vh - 40px);display:flex;flex-direction:column}
+.sh-h{padding:12px 16px;color:#fff;display:flex;align-items:center;gap:10px}
+.sh-h h2{font:700 18px var(--disp);margin:0;flex:1}
+.sh-h button{all:unset;cursor:pointer;font:600 13px var(--body);padding:4px 10px;border:1px solid rgba(255,255,255,.6);border-radius:5px}
+.sh-b{padding:6px 16px 16px;overflow:auto}
+.sec{margin-top:12px}
+.lab{font:700 11px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.sec.sw .lab{color:var(--sw)}
+.sec.sw .txt{background:var(--swt);border-left:3px solid var(--sw);padding:8px 10px;border-radius:0 6px 6px 0}
+.sec ol{margin:0;padding-left:20px}.sec li{margin:3px 0}
+.txt b{font-weight:600}
+code,.m{font-family:var(--mono);font-size:12.5px}
+.seen{color:var(--mute)}
+.nav{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{font:600 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+/* ladder + calcs */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:14px}
+.card h3{font:700 16px var(--disp);margin:0 0 4px}
+.card p.d{margin:0 0 10px;color:var(--mute)}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.fld label{display:block;font:600 11px var(--body);color:var(--mute);margin-bottom:2px}
+.fld input{width:100%;font:400 14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);min-width:0}
+.out{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.o{border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:var(--bg)}
+.o span{display:block;font:600 11px var(--body);color:var(--mute)}
+.o b{font:600 16px var(--mono)}
+.o.key{border-color:var(--gB);background:var(--tB)}
+.flow{display:grid;gap:10px;margin-top:12px}
+.row{display:grid;grid-template-columns:70px repeat(5,minmax(0,1fr));gap:6px;align-items:stretch}
+.row .lv{font:700 13px var(--disp);display:flex;align-items:center}
+.bx{border:1px solid var(--line);border-radius:6px;padding:6px 7px;background:var(--bg);font-size:11px;color:var(--mute);min-width:0}
+.bx b{display:block;font:600 14px var(--mono);color:var(--ink)}
+.bx.res{background:var(--tA);border-color:var(--gA)}
+.bx .op{font:700 11px var(--mono);color:var(--gB)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;font-size:13px}
+th{background:var(--tA);font:700 12px var(--disp)}
+td .pl{all:unset;cursor:pointer;font:700 12px var(--mono);padding:2px 7px;border-radius:4px;color:#fff;display:inline-block;margin-right:3px}
+.pl:focus-visible{outline:2px solid var(--gB)}
+.note{font-size:12px;color:var(--mute);margin-top:8px}
+@media (max-width:640px){.row{grid-template-columns:repeat(2,minmax(0,1fr))}.row .lv{grid-column:1/-1}h1{font-size:22px}}
+@media (prefers-reduced-motion:no-preference){.tile{transition:border-color .15s,opacity .15s}}
+</style>
+<div class="wrap">
+<header>
+<h1>CMA Pattern Map</h1>
+<p class="sub">Spot the pattern in a question, open its steps, check against solved problems, then try the numbers in the calculators. Professor's methods only (Days 1–6, Problem Sets 1–3, PlayCraft, Camelback).</p>
+</header>
+<div class="bar">
+<div class="tabs" role="tablist" id="tabs">
+<button class="tab" role="tab" data-t="map" aria-selected="true">Pattern map</button>
+<button class="tab" role="tab" data-t="ladder" aria-selected="false">Cost ladder</button>
+<button class="tab" role="tab" data-t="calc" aria-selected="false">Calculators</button>
+<button class="tab" role="tab" data-t="index" aria-selected="false">Every numerical</button>
+</div>
+<div id="finder">
+<div class="search"><input id="q" type="search" placeholder="Type words from the question: break-even, closing stock, reciprocal, 25% on cost…" aria-label="Find a pattern"><button class="btn" id="clr">Clear</button></div>
+<div class="chips" id="chips"></div>
+</div>
+</div>
+<main id="main"></main>
+</div>
+<dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
+<script>
+const G={A:{n:'Cost accounting',c:'--gA',t:'--tA'},B:{n:'Overhead',c:'--gB',t:'--tB'},C:{n:'CVP and decisions',c:'--gC',t:'--tC'},D:{n:'Budgets',c:'--gD',t:'--tD'},E:{n:'Case',c:'--gE',t:'--tE'}};
+const P=[
+{id:'P1',g:'A',n:'Cost sheet (forward)',hook:'Prime = DM used + DL · TMC = PC + MOH · COGM = TMC ± WIP · COGS = COGM ± FG',
+spot:'cost sheet, prime cost, works cost, cost of production, profit, statement of cost',
+do:['DM AFU = opening + purchases + freight − returns; DM used = AFU − closing','+ DL (+ direct expenses) = <b>Prime cost</b>','+ factory OH = <b>TMC</b> (works cost gross)','± WIP = <b>COGM</b> (works cost net)','Layout B only: + admin = cost of production','± FG = <b>COGS</b>','+ selling &amp; distribution (+ admin in layout A) = <b>cost of sales</b>','Sales − cost of sales = <b>profit</b>','Adjust first: + accrued, − prepaid; returns reduce purchases; drop financial items (interest, bad debt, dividend income); asset purchase → only depreciation; shared cost by ratio (8:1:1; rates 2/3 factory, 1/3 office)'],
+sw:'<b>Layout A</b>: admin is a period cost (COGS + admin + selling). <b>Layout B</b>: admin added to production. Total cost and profit are the same; closing-stock value differs.',
+seen:'Set 1 P1: DM used 291,200; PC 509,200; MOH 170,550; TMC 679,750; COGM 687,750; COP (B) 706,625; COGS 652,750; NMC 111,275; loss (10,025). P3: profit 24,300 either layout. P4: 5,580 or 5,370. Day 3 class Day 1 / Day 2.'},
+{id:'P2',g:'A',n:'Back-solve the missing box',hook:'CC = DL ÷ (1−x) · COGS = sales × (1−GM%) · closing = available − used',
+spot:'closing stock missing, fire, find DL, find MOH, GM%, indirect costs are x% of conversion cost',
+do:['Draw the ladder (Cost ladder tab) and fill what is known','Solve the unknown from its own row: closing = available − used','DL = TMC − DM used − MOH','MOH is x% of CC → <b>CC = DL ÷ (1−x)</b>; MOH = CC − DL','GM% → <b>COGS = sales × (1−GM%)</b>; closing FG = FG AFS − COGS; COGM = FG AFS − opening FG; closing WIP = WIP AFU − COGM','Fixed MOH = total MOH − variable MOH'],
+sw:'',seen:'Set 2 Q1: CC 18 ÷ 0.6 = 30, MOH 12; closing DM 6.2, WIP 2.8, FG 5.0 (Rs lakh). Q4 (Rs mn): closing DM 750; DL 7,450; fixed MOH 2,300; closing WIP 1,500; AFS 18,250.'},
+{id:'P3',g:'A',n:'Per-unit cost and inventory',hook:'Unit cost = mfg cost ÷ units produced · price = revenue ÷ units sold',
+spot:'units produced not equal units sold, closing FG at cost, variable marketing, not inventoriable',
+do:['Unit mfg cost = total mfg cost ÷ units <b>produced</b>','FG units = produced − sold (or FG value ÷ unit cost)','COGS = total mfg cost − FG value','Price = revenue ÷ units <b>sold</b>','Variable mfg cost follows <b>produced</b>; variable marketing follows <b>sold</b>; fixed mfg cost goes into stock','OI = revenue − COGS − marketing − fixed non-mfg'],
+sw:'<b>"Not inventoriable"</b>: take that cost out of unit cost (2.33 → 2.01), expense it separately. Profit falls by FG units × amount per unit.',
+seen:'Set 2 Q2: DM 1,400; 9,000 FG units; price 4.80; OI 11,920. Q3: unit cost 2.01; OI 9,040 (= 11,920 − 9,000 × 0.32). Set 1 P4. PlayCraft (d).'},
+{id:'P4',g:'A',n:'Price or quote',hook:'x% on cost → cost × (1+x) · y% on price → cost ÷ (1−y)',
+spot:'quote a price, profit 25% on cost, profit on selling price, overhead as % of wages',
+do:['Works OH % = works OH ÷ wages (or DL)','E&amp;G (admin) % = E&amp;G ÷ works cost','Apply both % to the new job','Price = cost × (1+x) for x% on cost'],
+sw:'<b>y% on selling price</b> → price = cost ÷ (1−y). 25% on cost = 20% on price.',seen:'Set 1 P2: works cost 380,000; OH 25% of wages; E&amp;G 5%; new job cost 16,275; price 20,343.75. P3: factory OH % of DL, admin % of works cost, selling % of sales.'},
+{id:'P5',g:'A',n:'Classify and relevant cost',hook:'Does the TOTAL change with activity? yes = variable, no = fixed',
+spot:'fixed, variable, mixed, direct, indirect, product cost, period cost, relevant, sunk, opportunity, value-added',
+do:['<b>Variable</b>: total = v × units, per unit constant. <b>Fixed</b>: total constant, per unit = F ÷ units. <b>Mixed</b>: Y = F + vX','<b>Relevant</b> = future AND differs between alternatives','Differential = A − B; marginal = one more unit; sunk = ignore; opportunity = best forgone benefit','Product cost = DM+DL+MOH (inventory); period = selling + admin','Value-added: would the customer pay for it?'],
+sw:'Fixed cost <b>per unit</b> must never be multiplied by a new volume. Fixed is fixed <b>in total</b>.',seen:'Day 2 CP1–5; QFT4 (gasoline variable, insurance fixed); Elaine fixed cost 850,000 (a); pizza, rent, HBO per-unit fixed; Day 1 VA / NVA.'},
+{id:'P6',g:'A',n:'T-account flow',hook:'COGM = % finished × WIP total · COGS = % sold × FG',
+spot:'RM WIP FG accounts, percent finished, percent sold, PlayCraft, Solomon Grundy',
+do:['Raw material: open + purchases − closing = used (indirect material goes to MOH)','WIP: + DL + MOH = total; <b>COGM = % finished × WIP total</b>; rest stays in WIP','FG: <b>COGS = % sold × FG</b>; rest stays in FG','Free material = nil; machine or furniture bought = asset','Factory power, supervisor, repairs = MOH; freight outward, advertising, office salary = period'],
+sw:'',seen:'Solomon Grundy: COGM 5,520 (80%); WIP 1,380; COGS 3,864 (70%); FG 1,656. PlayCraft: DM 270,000; MOH 211,000; COGM 621,000; COGS 611,000; GP 589,000; OP 481,000.'},
+{id:'P7',g:'A',n:'Statement format',hook:'GM format: sales − COGS · CM format: sales − all variable',
+spot:'gross margin statement, contribution margin statement, income statement format',
+do:['<b>GM format</b>: sales − COGS = gross margin; − selling − admin = OI','<b>Contribution format</b>: sales − all variable (mfg + selling + admin) = CM; − all fixed = OI','Building depreciation etc. split by area (Madi)'],
+sw:'Same OI only if there is no inventory change.',seen:'Day 3: sales 1,000 → OI 182 in both formats. Madi: 100,000 split 80/10/10.'},
+{id:'P8',g:'B',n:'Primary distribution',hook:'Ratio: part ÷ total × cost · Rate: cost ÷ total base × dept base',
+spot:'share rent, power, light, insurance, supervision among departments, apportion overhead',
+do:['<b>Ratio</b>: write base across depts, cancel common factors, share = part ÷ total × cost (1500:1100:900:500 = 15:11:9:5)','<b>Rate</b>: rate = cost ÷ total base; share = rate × dept base','Check: sum of depts = total cost','A dept without that base gets nil and is left out of its ratio','Bases: rent, building depreciation → area · plant repairs, depreciation → plant value · power → horse power · light → light points · supervision, canteen → employees or wages · fire insurance on stock → stock value · stores → requisitions · time-keeping → employees · repairs → hours'],
+sw:'Same answer by ratio or rate; do one, check with the other.',seen:'Set 3 P1: total 52,000; rent 10,000 area 15:11:9:5 → A 3,750; totals A 22,150, B 15,075, C 10,000, D 4,775.'},
+{id:'P9',g:'B',n:'Service to production',hook:'Reciprocal: E = (E₀ + a·F₀) ÷ (1 − a·b)',
+spot:'stores maintenance time-keeping serve each other, direct method, step method, reciprocal, repeated distribution, dual rate',
+do:['<b>Direct</b>: ignore service↔service; ratio among production depts only','<b>Step</b>: start with the dept serving most others; new total = own + received; base excludes itself and closed depts; sequence changes the answer','<b>Reciprocal</b>: E = E₀ + a·F; F = F₀ + b·E → <b>E = (E₀ + a·F₀) ÷ (1 − a·b)</b>, then F; then P = P₀ + %E·E + %F·F','<b>Repeated distribution</b>: push balances back and forth until ≈ 0 (same totals)'],
+sw:'Percentages from a ratio use the <b>whole</b> ratio (incl. the other service dept): E → A4:B5:C7:F4 = 20/25/35/20; direct uses 4:5:7 only. <b>Single rate</b> = total cost ÷ total base. <b>Dual rate</b> = variable pool × actual use + fixed pool × budgeted use.',
+seen:'Set 3 P2 direct: 17,100 / 14,500 / 13,200. P3 step: X 15,421, Y 10,579. P4 reciprocal: E 2,693.88, F 3,538.78; A 9,423.47, B 8,058.16, C 9,358.37 (26,840). Day 4 mini example.'},
+{id:'P10',g:'B',n:'Common cost and bundle',hook:'Share = SA ÷ ΣSA × common cost',
+spot:'common cost, users share facility, stand-alone, incremental, bundle price split, revenue allocation',
+do:['<b>Stand-alone</b>: share = SA<sub>i</sub> ÷ ΣSA × common cost','<b>Incremental</b>: rank users; first user pays own SA; next pays (total − first SA)','<b>Bundle</b>: product share = bundle price × weight ÷ Σ weights (weights = stand-alone selling prices; or unit cost; or units)'],
+sw:'Incremental depends on the ranking; compromise = equal split of the rest.',seen:'Walk-through 14.7 / 14.8: SA 75 and 85, joint 115 → 47% / 53% → 54.05 / 60.95; incremental 75 / 40 (or 57.50 each).'},
+{id:'P11',g:'C',n:'Cost estimation',hook:'m = ΔY ÷ ΔX · b = Y − mX',
+spot:'high-low, regression, mixed cost, estimate fixed and variable, data points, account analysis',
+do:['<b>High-low</b>: pick highest and lowest <b>activity</b>; m = ΔY ÷ ΔX; b = Y − mX','<b>Regression</b>: slope = variable cost per unit, intercept = fixed; Excel =SLOPE(Y,X), =INTERCEPT(Y,X), =FORECAST(), or Data Analysis → Regression','<b>Account analysis</b>: read fixed and variable from the bill'],
+sw:'High-low uses 2 points only; regression uses all. When usage changes, scale only the <b>variable</b> part.',seen:'Deck: (3, 9) and (12, 15) → m 0.67, b 6.96. Regression 14.98 / 8,773.72. Water: 770 × 12 + 1,709 × 12. Cheese Co.: Y = 7.50X + 14,000.'},
+{id:'P12',g:'C',n:'Absorption vs variable',hook:'Profit(abs) − Profit(var) = (produced − sold) × FMOH per unit',
+spot:'two profit figures, absorption costing, variable costing, inventory change, marginal cost',
+do:['<b>Absorption</b> unit cost = DM + DL + VMOH + <b>FMOH ÷ units produced</b>','<b>Variable</b> unit cost excludes FMOH (expensed)','<b>Profit(abs) − Profit(var) = (produced − sold) × FMOH/unit</b>','Marginal cost = prime cost + variable OH'],
+sw:'Equal profit if produced = sold. If DL is fixed (Indian practice) leave it out of marginal cost.',seen:'4,000 made, 3,800 sold, FMOH 50,000 → 12.50 × 200 = 2,500 (5,500 vs 3,000); inventory 4,500 vs 2,000. Marginal cost 8.00.'},
+{id:'P13',g:'C',n:'CVP basics',hook:'BE units = FC ÷ CM · BE sales = FC ÷ CM ratio · OL = CM ÷ OI',
+spot:'break-even, target profit, tax, margin of safety, operating leverage, contribution margin ratio',
+do:['CM/unit = P − v; <b>CM ratio</b> = CM ÷ P','Break-even: <b>units = FC ÷ CM/unit</b>; <b>sales = FC ÷ CM ratio</b>','Target: units = (FC + TP) ÷ CM/unit; sales = (FC + TP) ÷ CM ratio','<b>Net target → OI = NI ÷ (1 − t)</b> first','MOS = budget − BE; ratio = MOS ÷ budget','<b>OL = CM ÷ OI; %ΔOI = OL × %Δsales</b>'],
+sw:'<b>Units</b> answer uses CM per unit; <b>rupee</b> answer uses CM ratio. OL changes with the sales level.',seen:'Tee Times: CM 200; BE 250; TP 90,000 → 700 sets; NI 63,000 at 30% → 420,000. Coffee Klatch: CM 1.13; ratio 0.758; BE 1,150; 3,363 cups; 5,013; MOS 950; OL 2.21; +20% → +44.2%.'},
+{id:'P14',g:'C',n:'Multi-product and mix',hook:'WACM = Σ mix × CM · BE units = FC ÷ WACM',
+spot:'several products, sales mix, weighted average contribution margin, change of mix',
+do:['<b>Mix in units</b>: WACM = Σ mix × CM/unit; BE units = FC ÷ WACM; each product = BE × mix','<b>Mix in sales ₹</b>: contribution = sales × CM ratio of each; profit = ΣCM − FC; compare old and new mix'],
+sw:'Keep the mix: units must be in the ratio. Slide shows 3,247 (rounded WACM); exact 3,263.',seen:'Savor the Flavor: WACM 1.5325; BE 3,263 (816 / 489 / 1,958). Eg 5: profit 12,600 → 8,280.'},
+{id:'P15',g:'C',n:'What-if (RBC)',hook:'ΔProfit = ΔQ × CM − ΔFC',
+spot:'what if, price change, variable cost change, advertising, commission, volume change, wholesaler',
+do:['Base: P 500, v 300, FC 80,000, Q 500 → profit 20,000','New profit = new Q × new CM − new FC; compare with base','Volume and fixed only: <b>ΔProfit = ΔQ × CM − ΔFC</b>'],
+sw:'Price or v change → CM changes for <b>all</b> units. Commission replaces salary → v up, FC down.',seen:'540 units + 10,000 ad → −2,000. v 310, Q 580 → +10,200. P 480, FC +15,000, Q 650 → +2,000. Commission (+15 / −6,000, Q 575) → +12,375. Wholesaler 150 units at 320 = 300 + 3,000 ÷ 150.'},
+{id:'P16',g:'C',n:'Special order and minimum price',hook:'Spare: variable + order fixed + profit · Full: add opportunity cost',
+spot:'minimum price, accept the order, spare capacity, scarce resource, opportunity cost, special tools',
+do:['<b>Spare capacity</b>: price ≥ variable cost + order-specific fixed (tools, ads) + wanted profit; ignore existing fixed','<b>Scarce resource</b>: contribution per hour = CM ÷ hours; opportunity cost = hours × that; accept only if price &gt; DM + labour + VOH + opportunity cost','<b>Extra capacity</b>: flex each cost (split mixed), contribution needed = fixed + target profit − existing contribution'],
+sw:'Capacity full → add opportunity cost. Capacity spare → variable cost only.',seen:'Eg 1: 2 + 1 + 4 + 2.5 = Rs 9.50. Eg 2: 8.385 + 2.9125 = 11.2975. Eg 3: 6,000 vs 5,500 → reject. Eg 4: combination profit 1.75 lakh (vs 1.20, 1.475); capacity 60% → 100% = 25.00 lakh.'},
+{id:'P17',g:'D',n:'Master budget to cash',hook:'Production = sales + end FG − begin FG · borrow = minimum − balance',
+spot:'sales forecast, purchases, direct labour hours, collections, payments, cash budget, borrowing, receivables',
+do:['Order: sales → <b>production</b> → DM / DL / OH / S&amp;A → collections and payments → <b>cash budget</b> → COGM / COGS → statements','Production = sales + ending FG − beginning FG (ending = % of <b>next</b> month)','RM purchases = production × kg + ending RM − beginning RM; × price','<b>Hours paid = MAX(required, guaranteed)</b>','OH cash = total − depreciation','Collections = Σ % × sales of each month back; uncollectible never collected','Cash: beginning + receipts − disbursements; <b>borrow = minimum − balance</b>; interest = P × r × months ÷ 12','Payables: % this month + % next month; discount × (1 − d)'],
+sw:'Receivables and payables at year-end = unpaid % of recent months. Disbursements exclude depreciation; dividends, equipment, loan repayments are cash.',seen:'Practice: 1 Bison 2,040; 2 Swansong 32,950; 3 Coleman 49,200; 4 Tidewater 264,000; 5 Northcutt $183,750; 6 Quattro $75,000; 7 Verna $46,000; 8 Phineus $674,000; 9 Wolverine +$4,500. Gingham $94,160 / $114,000 / $94,860 / $113,300. Tiara 42,200 / 47,150 / 43,350 / 132,700.'},
+{id:'P18',g:'D',n:'Flexible budget',hook:'Flexed = v × actual activity + fixed · variance = actual − flexed',
+spot:'actual vs budget, flexed budget, static budget, variance favourable unfavourable, activity level',
+do:['<b>Flexed = v × actual activity + fixed</b> (fixed never flexes)','<b>Variance = actual − flexed</b>: cost higher = <b>U</b>, lower = <b>F</b>','Formula from two points: v = ΔY ÷ ΔX; F = Y − vX'],
+sw:'Static budget variance mixes volume and spending; use flexed for control. Cash budget for a <b>range</b> of activity is flexible.',seen:'Interspace $8,700 U (static); Gridiron $6,400 U (27,500 × 6 = 165,000); Trois Elles $3,000 F; Zin E; Young Y = 4.5AH + 720,000 (B); 877,500 at 35,000 hrs (A).'},
+{id:'P19',g:'E',n:'Single rate, drop, spiral',hook:'Rate = (Σ variable OH + fixed 45,000) ÷ Σ DLH · mark-on = (price − cost) ÷ cost',
+spot:'Camelback, burden rate, direct labour hours, mark-on, drop a product, death spiral, two pools, contribution',
+do:['DLH/unit = DL ÷ 5','<b>Rate = (Σ variable OH + fixed 45,000) ÷ Σ DLH</b>','Std cost = DM + DL + DLH × rate','<b>Mark-on = (price − cost) ÷ cost</b>; drop if &lt; 25%','Capacity released makes the sister product → <b>recompute DLH and rate</b> → repeat','<b>Contribution</b>: CM/unit = price − variable cost; pick best per equipment group; fixed is sunk','<b>Two pools</b>: pool OH ÷ pool DLH'],
+sw:'Mark-on is on <b>cost</b>, not price.',seen:'Rates 6.67 → 10.36 → 12.50 → 30.00. Q1: C dropped (28.50 / 78.50 / 50.00). Q2: rate 12.50, D dropped, B alone fails. Q3: 70,000 → 53,000 → 50,000 → −3,000. Q4: 90,000. Q5: 50,000. Q6: 53,000.'}
+];
+const IDX=[['Set 1 P1 (ABC cost sheet)','P1','loss (10,025)'],['Set 1 P2 (quote)','P4','price 20,343.75'],['Set 1 P3','P1,P4','profit 24,300'],['Set 1 P4','P1,P3','5,580 / 5,370'],
+['Set 2 Q1 (fire)','P2','CC 30; MOH 12; stocks 6.2 / 2.8 / 5.0'],['Set 2 Q2','P3','OI 11,920; price 4.80'],['Set 2 Q3','P3','OI 9,040'],['Set 2 Q4','P2','AFS 18,250'],
+['Set 3 P1 (primary)','P8','A 22,150; B 15,075; C 10,000; D 4,775'],['Set 3 P2 (direct)','P9','17,100 / 14,500 / 13,200'],['Set 3 P3 (step)','P9','X 15,421; Y 10,579'],['Set 3 P4 (reciprocal)','P9','9,423.47 / 8,058.16 / 9,358.37'],
+['PlayCraft','P6,P1','COGM 621,000; OP 481,000'],['Solomon Grundy','P6','5,520 / 3,864'],['Madi','P7,P8','split by area'],['Day 3 class funnel (Day 1 and 2)','P1','TMC 350 / 600; COGS 225 / 375'],['Day 3 GM vs CM','P7','OI 182'],
+['Day 1–2 CP, QFT, Elaine','P5','850,000 (a)'],['Common cost 14.7 / 14.8','P10','54.05 / 60.95'],['Bundle split','P10','by selling price'],['High-low / regression','P11','0.67, 6.96; 14.98, 8,773.72'],
+['Absorption vs variable','P12','2,500'],['Tee Times','P13','250; 700; 420,000'],['Coffee Klatch','P13','OL 2.21; +44.2%'],['Savor the Flavor','P14','3,263 units'],['RBC cases','P15','−2,000; +10,200; +2,000; +12,375'],
+['Eg 1 / 2 / 3','P16','9.50 / 11.2975 / reject'],['Eg 4','P16','1.75 lakh'],['Eg 5','P14','12,600 → 8,280'],['Practice 1–9, Gingham, Tiara','P17','see pattern'],['Interspace, Gridiron, Trois Elles, Zin, Young','P18','see pattern'],['Camelback Q1–Q6','P19','see pattern']];
+const CHIPS=['cost sheet','closing stock missing','units sold not produced','profit on cost','fixed or variable','departments share','service departments','reciprocal','high-low','break-even','several products','special order','cash budget','variance','Camelback'];
+const $=s=>document.querySelector(s);
+const col=g=>`var(${G[g].c})`;
+let tab='map',query='',grp='';
+const SYN={'closing stock':'back-solve missing','fire':'missing','units sold':'per-unit produced sold'};
+function score(p){if(!query)return 0;const hay=(p.id+' '+p.n+' '+p.spot+' '+p.hook+' '+p.seen+' '+p.do.join(' ')).toLowerCase().replace(/<[^>]+>/g,'');const ws=query.toLowerCase().split(/\s+/).filter(Boolean);let s=0;for(const w of ws){if(hay.includes(w))s+=1;if(p.spot.toLowerCase().includes(w))s+=2;}return s}
+function renderChips(){$('#chips').innerHTML=CHIPS.map(c=>`<button class="chip${query===c?' on':''}" data-c="${c}">${c}</button>`).join('')+Object.keys(G).map(k=>`<button class="chip${grp===k?' on':''}" data-g="${k}" style="border-style:dashed">${G[k].n}</button>`).join('')}
+function renderMap(){
+ const sc=P.map(p=>score(p));const best=Math.max(0,...sc);
+ let h='';const groups=grp?[grp]:Object.keys(G);
+ for(const g of groups){
+  h+=`<div class="gh" style="color:${col(g)}"><i style="background:${col(g)}"></i>${G[g].n}</div><div class="grid">`;
+  for(const p of P.filter(p=>p.g===g)){const s=sc[P.indexOf(p)];const cls=query?(s>0&&s>=Math.max(1,best-1)?' hit':(s===0?' dim':'')):'';
+   h+=`<button class="tile${cls}" data-p="${p.id}" style="--bgt:var(${G[g].t})"><span class="top"><span class="badge" style="background:${col(g)}">${p.id}</span><span class="nm">${p.n}</span></span><span class="hook">${p.hook}</span><span class="tr">${p.spot.split(', ').slice(0,3).join(' · ')}</span></button>`}
+  h+='</div>'}
+ $('#main').innerHTML=h;if(query){const t=document.querySelector('.tile.hit');if(t){t.style.scrollMarginTop='170px';t.scrollIntoView({block:'start'})}}}
+function openP(id){const p=P.find(x=>x.id===id);const i=P.indexOf(p);
+ $('#sheet').innerHTML=`<div class="sh-h" style="background:${col(p.g)}"><span class="badge" style="background:rgba(255,255,255,.22)">${p.id}</span><h2>${p.n}</h2><button id="cl">Close</button></div><div class="sh-b">
+ <div class="sec"><div class="lab">Spot it</div><div class="txt">${p.spot}</div></div>
+ <div class="sec"><div class="lab">Do</div><div class="txt"><ol>${p.do.map(d=>`<li>${d}</li>`).join('')}</ol></div></div>
+ ${p.sw?`<div class="sec sw"><div class="lab">Switch</div><div class="txt">${p.sw}</div></div>`:''}
+ <div class="sec"><div class="lab">Seen in (check your answer)</div><div class="txt seen">${p.seen}</div></div>
+ <div class="nav"><button class="btn" data-p="${P[(i+P.length-1)%P.length].id}">← ${P[(i+P.length-1)%P.length].id}</button><button class="btn" data-p="${P[(i+1)%P.length].id}">${P[(i+1)%P.length].id} →</button></div></div>`;
+ const d=$('#dlg');if(!d.open)d.showModal();}
+/* ladder */
+const LD={dmo:0,pur:400,fr:50,ret:25,dmc:225,dl:100,moh:50,wo:0,wc:75,fo:0,fc:50};
+const LL={dmo:'Opening DM',pur:'Purchases',fr:'Freight in',ret:'Returns',dmc:'Closing DM',dl:'Direct labour',moh:'Factory OH',wo:'Opening WIP',wc:'Closing WIP',fo:'Opening FG',fc:'Closing FG'};
+const n=v=>{v=+v;return isNaN(v)?0:v};
+const f=(v,d=2)=>isFinite(v)?(Math.round(v*10**d)/10**d).toLocaleString('en-US',{maximumFractionDigits:d}):'–';
+function ladderCalc(){const v={};for(const k in LD)v[k]=n($('#l_'+k).value);
+ const afu=v.dmo+v.pur+v.fr-v.ret,used=afu-v.dmc,pc=used+v.dl,tmc=pc+v.moh,wafu=tmc+v.wo,cogm=wafu-v.wc,afs=cogm+v.fo,cogs=afs-v.fc;
+ const bx=(l,x,c,op)=>`<div class="bx${c?' res':''}">${op?`<span class="op">${op}</span> `:''}${l}<b>${f(x)}</b></div>`;
+ $('#lout').innerHTML=`<div class="row"><div class="lv">DM</div>${bx('Opening',v.dmo)}${bx('Purchases + freight − returns',v.pur+v.fr-v.ret,0,'+')}${bx('DM AFU',afu,1,'=')}${bx('Closing',v.dmc,0,'−')}${bx('DM used',used,1,'=')}</div>
+ <div class="row"><div class="lv">WIP</div>${bx('Opening WIP',v.wo)}${bx('TMC = DM used + DL + MOH',tmc,1,'+')}${bx('WIP AFU',wafu,1,'=')}${bx('Closing WIP',v.wc,0,'−')}${bx('COGM',cogm,1,'=')}</div>
+ <div class="row"><div class="lv">FG</div>${bx('Opening FG',v.fo)}${bx('COGM',cogm,0,'+')}${bx('FG AFS',afs,1,'=')}${bx('Closing FG',v.fc,0,'−')}${bx('COGS',cogs,1,'=')}</div>
+ <div class="out"><div class="o"><span>Prime cost</span><b>${f(pc)}</b></div><div class="o"><span>Conversion cost (DL + MOH)</span><b>${f(v.dl+v.moh)}</b></div><div class="o"><span>TMC = COP gross</span><b>${f(tmc)}</b></div><div class="o"><span>COGM = COP net</span><b>${f(cogm)}</b></div><div class="o key"><span>COGS</span><b>${f(cogs)}</b></div></div>`}
+function renderLadder(){$('#main').innerHTML=`<div class="card"><h3>Cost ladder</h3><p class="d">The same three steps at every level: opening + added = available, available − closing = used. Change any number; it starts with the Day 3 class example (Day 1: TMC 350, COGM 275, COGS 225). To back-solve (pattern P2), type the answer you know and adjust the unknown box until it matches.</p>
+ <div class="fields">${Object.keys(LD).map(k=>`<div class="fld"><label for="l_${k}">${LL[k]}</label><input id="l_${k}" type="number" inputmode="decimal" value="${LD[k]}"></div>`).join('')}</div>
+ <div class="flow" id="lout"></div><p class="note">Prime cost = DM used + DL. Cost of sales = COGS + admin + selling. Profit = sales − cost of sales.</p></div>`;
+ document.querySelectorAll('#main input').forEach(i=>i.addEventListener('input',ladderCalc));ladderCalc()}
+/* calculators */
+function field(id,l,v){return `<div class="fld"><label for="f_${id}">${l}</label><input id="f_${id}" type="number" inputmode="decimal" step="any" value="${v}"></div>`}
+const val=id=>n($('#f_'+id).value);
+const CALC=[
+{k:'cvp',t:'CVP and break-even (P13)',d:'Preloaded with Tee Times: price 600, variable 400, fixed 50,000, 400 sets, net target 63,000 at 30% tax.',
+ f:[['price','Price / unit',600],['vc','Variable / unit',400],['fc','Fixed cost',50000],['q','Budget units',400],['ni','Target net income',63000],['tax','Tax rate %',30]],
+ r(){const p=val('price'),v=val('vc'),fc=val('fc'),q=val('q'),t=val('tax')/100,ni=val('ni');const cm=p-v,cr=cm/p,be=fc/cm,oi=ni/(1-t),tu=(fc+oi)/cm,ol=cm*q/(cm*q-fc);
+ return [['CM / unit',f(cm)],['CM ratio',f(cr*100)+'%'],['BE units',f(be,1),1],['BE sales',f(fc/cr,0),1],['OI needed (NI ÷ (1−t))',f(oi,0)],['Target units',f(Math.ceil(tu),0),1],['Target sales',f(Math.ceil(tu)*p,0)],['MOS units',f(q-be,1)],['MOS ratio',f((q-be)/q*100)+'%'],['Operating leverage',f(ol)]]}},
+{k:'rec',t:'Reciprocal method (P9)',d:'Preloaded with Set 3 P4: E 2,340 and F 3,000; E gives F 20%, F gives E 10%; E → A 20%, B 25%, C 35%; F → A 25%, B 25%, C 40%.',
+ f:[['e0','E own cost',2340],['f0','F own cost',3000],['a','% E gives to F',20],['b','% F gives to E',10],['ea','E → A %',20],['eb','E → B %',25],['ec','E → C %',35],['fa','F → A %',25],['fb','F → B %',25],['fc2','F → C %',40],['pa','A primary',8000],['pb','B primary',6500],['pc','C primary',7000]],
+ r(){const e0=val('e0'),f0=val('f0'),a=val('a')/100,b=val('b')/100;const E=(e0+b*f0)/(1-a*b),F=f0+a*E;const A=val('pa')+val('ea')/100*E+val('fa')/100*F,B=val('pb')+val('eb')/100*E+val('fb')/100*F,C=val('pc')+val('ec')/100*E+val('fc2')/100*F;
+ return [['E true cost',f(E),1],['F true cost',f(F),1],['A total',f(A),1],['B total',f(B),1],['C total',f(C),1],['Grand total',f(A+B+C)]]}},
+{k:'abs',t:'Absorption vs variable (P12)',d:'Preloaded: 4,000 made, 3,800 sold, fixed MOH 50,000, variable cost 10 per unit.',
+ f:[['pr','Units produced',4000],['so','Units sold',3800],['fm','Fixed MOH',50000],['vv','Variable cost / unit',10]],
+ r(){const pr=val('pr'),so=val('so'),fm=val('fm'),vv=val('vv');const fu=fm/pr;return [['FMOH / unit',f(fu)],['Profit difference (abs − var)',f((pr-so)*fu,2),1],['Closing stock, absorption',f((pr-so)*(vv+fu))],['Closing stock, variable',f((pr-so)*vv)]]}},
+{k:'hl',t:'High-low (P11)',d:'Preloaded with the Day 5 example: low (3, 9) and high (12, 15). Use the lowest and highest activity, not cost.',
+ f:[['xl','Low activity X',3],['yl','Cost at low Y',9],['xh','High activity X',12],['yh','Cost at high Y',15],['xn','Predict at X',8]],
+ r(){const m=(val('yh')-val('yl'))/(val('xh')-val('xl')),b=val('yh')-m*val('xh');return [['m (variable / unit)',f(m,3),1],['b (fixed)',f(b,3),1],['Y at X',f(m*val('xn')+b)]]}},
+{k:'pr',t:'Price from cost (P4)',d:'Preloaded with Set 1 P2: cost 16,275, profit 25% on cost, equal to 20% on selling price.',
+ f:[['co','Total cost',16275],['px','Profit % on cost',25],['py','Profit % on price',20]],
+ r(){const c=val('co');return [['Price (on cost)',f(c*(1+val('px')/100)),1],['Price (on selling price)',f(c/(1-val('py')/100)),1],['x% on cost = y% on price, y =',f(val('px')/(100+val('px'))*100)+'%']]}},
+{k:'stp',t:'Rate or ratio share (P8)',d:'Preloaded with the rent: 10,000 shared by area 1500 : 1100 : 900 : 500.',
+ f:[['cost','Cost',10000],['b1','Base A',1500],['b2','Base B',1100],['b3','Base C',900],['b4','Base D',500]],
+ r(){const t=val('b1')+val('b2')+val('b3')+val('b4'),c=val('cost');return [['Rate per unit of base',f(c/t,4)],['A',f(c*val('b1')/t),1],['B',f(c*val('b2')/t),1],['C',f(c*val('b3')/t),1],['D',f(c*val('b4')/t),1]]}}
+];
+function renderCalc(){$('#main').innerHTML=CALC.map(c=>`<div class="card" id="c_${c.k}"><h3>${c.t}</h3><p class="d">${c.d}</p><div class="fields">${c.f.map(x=>field(x[0],x[1],x[2])).join('')}</div><div class="out" id="o_${c.k}"></div></div>`).join('');
+ const run=()=>CALC.forEach(c=>{$('#o_'+c.k).innerHTML=c.r().map(r=>`<div class="o${r[2]?' key':''}"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')});
+ document.querySelectorAll('#main input').forEach(i=>i.addEventListener('input',run));run()}
+function renderIdx(){$('#main').innerHTML=`<div class="card"><h3>Every numerical, mapped to its pattern</h3><p class="d">Tap a pattern chip to open its steps and solved answers.</p><div class="scroll"><table><thead><tr><th>Numerical</th><th>Pattern</th><th>Key answer</th></tr></thead><tbody>${IDX.map(r=>`<tr><td>${r[0]}</td><td>${r[1].split(',').map(id=>{const p=P.find(x=>x.id===id);return `<button class="pl" data-p="${id}" style="background:${col(p.g)}">${id}</button>`}).join('')}</td><td class="m">${r[2]}</td></tr>`).join('')}</tbody></table></div><p class="note">Slide typos to ignore: Savor 3,247 vs 3,263; Example 2 prints 2.9215 (correct 2.9125); Set 1 P1 706,620 vs 706,625; Set 3 P2 Stores 600 / 400; PlayCraft DM 270,000.</p></div>`}
+function render(){$('#finder').hidden=tab!=='map';document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.t===tab));
+ ({map:()=>{renderChips();renderMap()},ladder:renderLadder,calc:renderCalc,index:renderIdx})[tab]()}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-p],[data-c],[data-g],#clr,#cl');if(!t)return;
+ if(t.dataset.t){tab=t.dataset.t;render()}
+ else if(t.dataset.p){openP(t.dataset.p)}
+ else if(t.dataset.c){query=query===t.dataset.c?'':t.dataset.c;$('#q').value=query;renderChips();renderMap()}
+ else if(t.dataset.g){grp=grp===t.dataset.g?'':t.dataset.g;renderChips();renderMap()}
+ else if(t.id==='clr'){query='';grp='';$('#q').value='';renderChips();renderMap()}
+ else if(t.id==='cl'){$('#dlg').close()}});
+$('#dlg').addEventListener('click',e=>{if(e.target===$('#dlg'))$('#dlg').close()});
+$('#q').addEventListener('input',e=>{query=e.target.value.trim();renderChips();renderMap()});
+render();
+</script>
+
+</body></html>

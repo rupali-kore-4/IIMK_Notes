@@ -1,0 +1,573 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>HRM Visual Revision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky header with mode tabs + module rail; a responsive grid of diagram cards; flashcard and quiz views share the same data. */
+:root{
+  --bg:#F2F5F8; --surface:#FFFFFF; --ink:#16212E; --muted:#5A6676; --line:#D7DEE7;
+  --accent:#0E7C74; --accent2:#C2410C; --good:#2F855A; --bad:#C53030; --warn:#B7791F;
+  --soft:#E1F1EF; --soft2:#FBEADC; --soft3:#EEF1F6;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --text:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E141B; --surface:#161F2A; --ink:#E5EBF1; --muted:#9AA6B5; --line:#2A3542;
+  --accent:#3BC1B2; --accent2:#F0894A; --good:#5CC98A; --bad:#F07272; --warn:#E2B04A;
+  --soft:#123330; --soft2:#3A2415; --soft3:#1D2733; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E141B; --surface:#161F2A; --ink:#E5EBF1; --muted:#9AA6B5; --line:#2A3542;
+  --accent:#3BC1B2; --accent2:#F0894A; --good:#5CC98A; --bad:#F07272; --warn:#E2B04A;
+  --soft:#123330; --soft2:#3A2415; --soft3:#1D2733; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--text);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:12px 10px}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto;min-width:0}
+.brand h1{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.brand span{color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:4px;background:var(--soft3);padding:3px;border-radius:999px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:600 13px var(--text);padding:7px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.search{flex:1 1 200px;max-width:280px;min-width:0}
+.search input{width:100%;font:14px var(--text);padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink)}
+.rail{display:flex;gap:6px;overflow-x:auto;padding-block:0 10px;scrollbar-width:thin}
+.rail button{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 12.5px var(--text);padding:5px 10px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.rail button .pc{color:var(--muted);font-variant-numeric:tabular-nums;margin-left:4px}
+.rail button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.rail button[aria-pressed="true"] .pc{color:inherit;opacity:.75}
+.rail .sep{flex:0 0 auto;align-self:center;font:700 11px var(--text);letter-spacing:.08em;color:var(--accent2);padding:0 2px 0 6px}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:18px 48px}
+.mhead{display:flex;flex-wrap:wrap;align-items:end;gap:6px 14px;margin:22px 0 10px}
+.mhead:first-child{margin-top:0}
+.mhead h2{font-family:var(--display);font-weight:700;font-size:20px;margin:0;letter-spacing:-.01em}
+.mhead .tag{font:700 11px var(--text);letter-spacing:.08em;color:var(--accent2);text-transform:uppercase}
+.mhead .prog{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.meter{width:90px;height:6px;border-radius:9px;background:var(--soft3);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;align-items:start}
+@media (max-width:420px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.done{border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+.chead{display:flex;align-items:start;gap:8px}
+.chead h3{font-family:var(--display);font-weight:700;font-size:16px;line-height:1.2;margin:0;flex:1;text-wrap:balance}
+.chead .src{font-size:11px;color:var(--muted);display:block;font-family:var(--text);font-weight:500;margin-top:2px}
+.tick{flex:0 0 auto;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:999px;font:600 11px var(--text);padding:4px 9px;cursor:pointer}
+.card.done .tick{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.kw{font-size:12.5px;color:var(--muted);margin:0}
+.kw b{color:var(--ink);font-weight:600}
+details.eg{font-size:12.5px;border-top:1px dashed var(--line);padding-top:8px}
+details.eg summary{cursor:pointer;color:var(--accent2);font-weight:600;list-style:none}
+details.eg summary::-webkit-details-marker{display:none}
+details.eg summary::before{content:"+ ";}
+details.eg[open] summary::before{content:"− ";}
+details.eg p{margin:6px 0 0}
+/* ---- viz parts ---- */
+.viz{min-width:0}
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.step{flex:1 1 90px;min-width:0;background:var(--soft);border-radius:8px;padding:7px 8px;position:relative}
+.step .n{font:700 10.5px var(--text);color:var(--accent);letter-spacing:.05em}
+.step .l{font-weight:700;font-size:12.5px;line-height:1.2}
+.step .t{font-size:11.5px;color:var(--muted);line-height:1.3;margin-top:2px}
+.step .f{margin-top:5px;font-size:11px;font-weight:600;color:var(--bad)}
+.step.win{background:var(--accent);color:var(--surface)}
+.step.win .t,.step.win .n{color:inherit;opacity:.85}
+.step.win .f{color:var(--surface)}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.chips.c3{grid-template-columns:repeat(auto-fill,minmax(95px,1fr))}
+.chip{background:var(--soft3);border-radius:8px;padding:7px 8px;min-width:0}
+.chip .l{font-weight:700;font-size:12.5px;line-height:1.2}
+.chip .t{font-size:11.5px;color:var(--muted);line-height:1.3;margin-top:2px}
+.chip.hl{background:var(--soft2)}
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.col{border:1px solid var(--line);border-radius:8px;padding:8px;min-width:0}
+.col h4{margin:0 0 5px;font:700 12.5px var(--text);color:var(--accent)}
+.col:nth-child(2) h4{color:var(--accent2)}
+.col:nth-child(3) h4{color:var(--warn)}
+.col ul{margin:0;padding-left:15px;font-size:12px}
+.col li{margin:1px 0}
+.matrix{display:grid;grid-template-columns:auto 1fr 1fr;gap:5px;font-size:12px}
+.matrix .ax{font:700 10.5px var(--text);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:center;text-align:center;padding:2px}
+.matrix .ay{writing-mode:vertical-rl;transform:rotate(180deg);max-width:22px}
+.matrix .cell{background:var(--soft3);border-radius:8px;padding:8px;min-width:0}
+.matrix .cell .l{font-weight:700;font-size:13px}
+.matrix .cell .t{font-size:11.5px;color:var(--muted);line-height:1.3;margin-top:2px}
+.matrix .cell.hl{background:var(--accent);color:var(--surface)}
+.matrix .cell.hl .t{color:inherit;opacity:.85}
+.matrix .cap{grid-column:2/4;text-align:center;font-size:11px;color:var(--muted)}
+.pyr{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pyr .lv{background:var(--accent);color:var(--surface);border-radius:6px;padding:5px 8px;text-align:center;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;max-width:100%}
+.pyr .rt{font-size:11px;color:var(--accent2);font-weight:700}
+.ladder{display:flex;flex-direction:column;gap:4px}
+.rung{display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:stretch}
+.rung .b{border-radius:6px;display:flex;align-items:center;justify-content:center;font:800 14px var(--display);color:#fff}
+.rung .x{background:var(--soft3);border-radius:6px;padding:5px 8px;min-width:0}
+.rung .x .l{font-weight:700;font-size:12.5px}
+.rung .x .t{font-size:11.5px;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:6px}
+.barrow{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;font-size:12px}
+.barrow .track{background:var(--soft3);border-radius:6px;height:20px;position:relative;overflow:hidden}
+.barrow .fill{height:100%;background:var(--accent);border-radius:6px}
+.barrow .val{position:absolute;inset:0 6px 0 auto;display:flex;align-items:center;font-weight:700;font-size:11.5px;font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;font-size:11.5px}
+.tbl th{background:var(--ink);color:var(--surface);text-align:left;padding:4px 6px;font-weight:600}
+.tbl td{border-bottom:1px solid var(--line);padding:4px 6px;vertical-align:top}
+.tbl td:first-child{font-weight:700;white-space:nowrap}
+.cyc{position:relative;width:100%;max-width:340px;margin:0 auto;aspect-ratio:1.35}
+.cyc svg{position:absolute;inset:0;width:100%;height:100%}
+.cyc .node{position:absolute;transform:translate(-50%,-50%);width:38%;background:var(--surface);border:1.5px solid var(--accent);border-radius:8px;padding:4px 6px;text-align:center}
+.cyc .node .l{font-weight:700;font-size:12px;line-height:1.15}
+.cyc .node .t{font-size:10.5px;color:var(--muted);line-height:1.2}
+.cyc .hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 11px var(--text);color:var(--accent2);text-align:center;width:30%}
+svg.plot{width:100%;height:auto;display:block}
+svg .axis{stroke:var(--line);stroke-width:1}
+svg .axl{fill:var(--muted);font:10px var(--text)}
+svg .lbl{fill:var(--ink);font:600 10px var(--text)}
+svg .lbl.m{fill:var(--muted);font-weight:500}
+svg .ln{fill:none;stroke-width:2.4;stroke-linecap:round}
+svg .s-a{stroke:var(--accent)} svg .s-b{stroke:var(--accent2)} svg .s-g{stroke:var(--good)} svg .s-r{stroke:var(--bad)} svg .s-m{stroke:var(--muted)}
+svg .d-a{fill:var(--accent)} svg .d-b{fill:var(--accent2)} svg .d-g{fill:var(--good)} svg .d-r{fill:var(--bad)} svg .d-m{fill:var(--muted)}
+svg .dash{stroke-dasharray:5 4}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--muted);margin-top:2px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.empty{padding:40px 0;color:var(--muted);text-align:center}
+/* ---- flashcards ---- */
+.fc-tools,.qz-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+select,.btn{font:600 13px var(--text);padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn.warn{background:var(--soft2);border-color:transparent}
+.fc-stage{max-width:620px;margin:0 auto}
+.flip{perspective:1200px;cursor:pointer;width:100%;border:0;background:none;padding:0;color:inherit;font:inherit;text-align:inherit}
+.flip .inner{position:relative;width:100%;min-height:260px;transition:transform .45s;transform-style:preserve-3d}
+.flip.on .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;padding:24px;display:flex;flex-direction:column;justify-content:center;gap:10px;border:1px solid var(--line);background:var(--surface)}
+.face.back{transform:rotateY(180deg);background:var(--soft)}
+.face .mod{font:700 11px var(--text);letter-spacing:.08em;color:var(--accent2);text-transform:uppercase}
+.face .term{font-family:var(--display);font-weight:800;font-size:clamp(24px,5vw,34px);line-height:1.1;text-wrap:balance}
+.face .def{font-size:17px;line-height:1.45}
+.face .hint{font-size:12px;color:var(--muted);margin-top:auto}
+.fc-nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.fc-count{text-align:center;color:var(--muted);font-size:12px;margin-top:10px;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.flip .inner{transition:none}}
+/* ---- quiz ---- */
+.qz{max-width:680px;margin:0 auto}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.qcard .qn{font:700 11px var(--text);letter-spacing:.08em;color:var(--accent2);text-transform:uppercase}
+.qcard .qq{font-size:17px;margin:8px 0 14px;line-height:1.4}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;font:600 14px var(--text);padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.opt.ok{background:color-mix(in srgb,var(--good) 18%,var(--surface));border-color:var(--good)}
+.opt.no{background:color-mix(in srgb,var(--bad) 16%,var(--surface));border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.qfoot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px}
+.qfoot .sc{margin-right:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+.qres{text-align:center;padding:30px 10px}
+.qres .big{font-family:var(--display);font-size:46px;font-weight:800;color:var(--accent)}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="bar">
+      <div class="brand"><h1>HRM Visual Revision</h1><span>14 modules · infographics, flashcards, quiz</span></div>
+      <div class="search"><input id="q" type="search" placeholder="Search topics or keywords" aria-label="Search topics"></div>
+      <div class="tabs" role="group" aria-label="Mode">
+        <button id="m-info" aria-pressed="true">Infographics</button>
+        <button id="m-flash" aria-pressed="false">Flashcards</button>
+        <button id="m-quiz" aria-pressed="false">Quiz</button>
+      </div>
+    </div>
+    <nav class="rail" id="rail" aria-label="Modules"></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="v-info"></section>
+  <section id="v-flash" hidden>
+    <div class="fc-tools">
+      <select id="fc-mod" aria-label="Flashcard module"></select>
+      <button class="btn" id="fc-shuf">Shuffle</button>
+      <button class="btn" id="fc-weak">Only cards to review</button>
+    </div>
+    <div class="fc-stage">
+      <button class="flip" id="flip" aria-label="Flip card">
+        <div class="inner">
+          <div class="face front"><div class="mod" id="fc-m1"></div><div class="term" id="fc-term"></div><div class="hint">Tap the card or press Space to see the meaning</div></div>
+          <div class="face back"><div class="mod" id="fc-m2"></div><div class="def" id="fc-def"></div><div class="hint">Do you know it?</div></div>
+        </div>
+      </button>
+      <div class="fc-nav">
+        <button class="btn" id="fc-prev">Previous</button>
+        <button class="btn warn" id="fc-again">Review again</button>
+        <button class="btn pri" id="fc-know">I know this</button>
+        <button class="btn" id="fc-next">Next</button>
+      </div>
+      <div class="fc-count" id="fc-count"></div>
+    </div>
+  </section>
+  <section id="v-quiz" hidden>
+    <div class="qz">
+      <div class="qz-tools">
+        <select id="qz-mod" aria-label="Quiz module"></select>
+        <select id="qz-n" aria-label="Number of questions"><option value="10">10 questions</option><option value="20">20 questions</option><option value="30">30 questions</option></select>
+        <button class="btn pri" id="qz-start">Start new quiz</button>
+      </div>
+      <div id="qz-box"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===================== DATA ===================== */
+const MODS = [
+ {id:"a1",p:"A",n:"Strategic HRM",s:"Prof. Prantika Ray · S1–2"},
+ {id:"a2",p:"A",n:"Recruitment & Selection",s:"Prof. Prantika Ray · S3–4"},
+ {id:"a3",p:"A",n:"International HRM",s:"Prof. Prantika Ray · Expats to digital nomads"},
+ {id:"a4",p:"A",n:"Mentoring & Coaching",s:"Prof. Prantika Ray"},
+ {id:"a5",p:"A",n:"Learning & Development",s:"Prof. Prantika Ray · S9–10"},
+ {id:"a6",p:"A",n:"Job Evaluation",s:"Prof. Prantika Ray · Point method"},
+ {id:"b1",p:"B",n:"Intro to HRM",s:"Prof. Anjana Karumathil · S1"},
+ {id:"b2",p:"B",n:"Strategic HRM (B)",s:"Prof. Anjana Karumathil · S2"},
+ {id:"b3",p:"B",n:"Recruitment (B)",s:"Prof. Anjana Karumathil · S3"},
+ {id:"b4",p:"B",n:"Talent Development",s:"Prof. Anjana Karumathil · S4"},
+ {id:"b5",p:"B",n:"Performance Mgmt",s:"Prof. Anjana Karumathil · S5"},
+ {id:"b6",p:"B",n:"Industrial Relations",s:"Prof. Anjana Karumathil · S6"},
+ {id:"b7",p:"B",n:"Sexual Harassment",s:"Prof. Anjana Karumathil · Reardon's spectrum"},
+ {id:"b8",p:"B",n:"Ethics in HRM",s:"Prof. Anjana Karumathil · S8"}
+];
+
+const C = []; // cards
+function card(m,t,v,k,eg,src){C.push({id:m+"-"+C.length,m,t,v,k,eg,src})}
+
+/* ---------- A1 STRATEGIC HRM ---------- */
+card("a1","HR as competitive advantage",{type:"compare",cols:[{h:"Old view",items:["HR = admin & paperwork","Cost centre","Carries out strategy set elsewhere"]},{h:"Strategic HRM",items:["People = edge over rivals","Strategic asset","HR helps create strategy"]}]},
+ "<b>Competitive advantage</b> = what lets a firm beat rivals. Machines can be bought; skilled, motivated people can't be copied.","Two airlines fly the same aircraft; the one with better-trained crew wins customers.");
+card("a1","Resource-Based View (RBV)",{type:"steps",items:[{l:"Firm resources",t:"What you have: people, know-how, brand"},{l:"Distinctive capabilities",t:"What you do especially well"},{l:"Sustained competitive advantage",t:"A lead rivals can't close",win:1}]},
+ "<b>Barney (1991)</b>, J. of Management. Advantage comes from <b>inside</b> the firm, not only market position. People, culture, routines = <b>strategic assets</b>.","A 50-year-old sweet shop wins on its trained halwais and recipes, not its oven.","Barney 1991");
+card("a1","VRIO — four gates",{type:"steps",gate:1,items:[{l:"Valuable?",t:"Uses opportunity / beats threat",f:"No → disadvantage"},{l:"Rare?",t:"Few rivals have it",f:"No → parity"},{l:"Inimitable?",t:"Costly to copy",f:"No → temporary edge"},{l:"Organised?",t:"Firm set up to use it",f:"Yes to all → sustained",win:1}]},
+ "Ask in order; a resource must pass <b>all four</b> for sustained advantage.","ATMs: valuable, not rare (parity). Tata's 150-year trust culture + HR systems: passes all four.");
+card("a1","The five strategic fits",{type:"chips",items:[{l:"Environmental",t:"HR ↔ outside world: social, cultural, institutional (laws, unions)"},{l:"Vertical (strategic)",t:"HR ↔ business strategy, mission, vision, goals"},{l:"Internal organisational",t:"HR ↔ technology, structure, work systems, culture"},{l:"Intra-function",t:"HR practices support, not contradict, each other"},{l:"Intra-activity",t:"Consistency inside one practice (e.g. all pay parts)"}]},
+ "Fit = <b>alignment</b>. Fits decide if HR <b>reinforces or undermines</b> strategy. Order: outside → top → inside → within HR → within one activity.","Training teamwork but ranking individuals for bonus = poor intra-function fit.");
+card("a1","Integrative model → 4 HR strategies",{type:"matrix",x:["Outcome control","Process control"],y:["Internal (make)","External (buy)"],xt:"Locus of workplace control",cells:[[{l:"Commitment",t:"Grow people inside, judge results"},{l:"Paternalistic",t:"Training + internal promotion for following rules"}],[{l:"Collaborative",t:"Subcontract experts, autonomy, judge end result"},{l:"Traditional",t:"Hire ready skills, control behaviour"}]]},
+ "Fits explain <b>why</b> align; this model explains <b>how</b> to choose. Axes: <b>acquisition &amp; development</b> × <b>locus of control</b>. Bratton &amp; Gold (2014), from Bamberger &amp; Meshoulam (2000).","Commitment: tech firm with OKRs. Paternalistic: PSU bank. Collaborative: agency builds website. Traditional: fast-food recipes.");
+
+/* ---------- A2 R&S ---------- */
+card("a2","Recruitment vs selection",{type:"compare",cols:[{h:"Recruitment",items:["Attract a pool of capable applicants","Widen the net","Effective only if new hires are used & developed"]},{h:"Selection",items:["Choose the best fit from the pool","Narrow down","Person–job + person–org fit; avoid negligent hiring"]}]},
+ "Definition: “attracting the interest of a pool of capable people who will apply”. People choose employers (less so in a <b>recession</b>); capability not fully predictable; depends on <b>talent management</b>.","Open cricket trials = recruitment; picking the final 15 = selection.");
+card("a2","Person–Environment (P-E) fit",{type:"chips",c3:1,items:[{l:"Person–Job",t:"Skills ↔ job demands"},{l:"Person–Vocation",t:"Right career"},{l:"Person–Person",t:"Boss / mentor match"},{l:"Person–Group",t:"Team match"},{l:"Person–Organisation",t:"Values & culture"}]},
+ "P-E fit = match between a person and some aspect of the work environment.","A great accountant (P-J) quits a mis-selling firm (poor P-O).");
+card("a2","ASA framework",{type:"cycle",hub:"Organisation goals",items:[{l:"Attraction",t:"Like-minded people drawn in"},{l:"Selection",t:"Firm picks people like itself"},{l:"Attrition",t:"Misfits leave"}]},
+ "Interactional psychology. <b>Work values</b> judge P-O fit; compared “directly and meaningfully”. Goals set by <b>founder / top managers</b>. Result: similar people, strong culture, less diversity.","Start-up attracts risk-takers; a cautious hire quits in 6 months.");
+card("a2","Sources of candidates",{type:"compare",cols:[{h:"Internal",items:["IJP (internal job postings)","Rehires (boomerangs)","Referrals","Succession planning"]},{h:"External",items:["Portals: LinkedIn, Naukri, Indeed, Monster; ATS / career sites","Texting / emails, ads, newspapers","Job fairs (virtual / in-person), walk-ins","Employment, temp & alternate staffing agencies; placement consultants","Headhunters, on-demand recruiters","College: campus, site visits, internships"]}]},
+ "Internal = cheaper, faster, knows culture, motivates. External = fresh skills and ideas.");
+card("a2","Is the source working?",{type:"chips",items:[{l:"Cost of hire",t:"Total costs ÷ no. of leads (travel, stay, ATS, ads, agency fees)"},{l:"Quality of hire",t:"Culture fit, competency fit, growth potential, learning, agility"},{l:"Timeliness",t:"Turnaround days, offer conversion, immediate joiners"}]},
+ "Track all three; one source rarely wins on all.","₹2,00,000 job fair ÷ 400 leads = ₹500 per lead.");
+card("a2","Job redesign",{type:"chips",c3:1,items:[{l:"Enlargement",t:"More tasks, same level (wider)"},{l:"Enrichment",t:"More responsibility & growth (deeper)"},{l:"Rotation",t:"Move across jobs"}]},
+ "Reshape jobs before hiring.","Receptionist also handles courier (enlarged) vs resolves complaints & trains juniors (enriched).");
+card("a2","Workforce planning",{type:"steps",items:[{l:"Plan & forecast"},{l:"Recruit a pool"},{l:"Application forms"},{l:"Screening tools"},{l:"Interview & hire",win:1}]},
+ "Deciding what positions to fill and how — every future role, maintenance clerk to CEO. <b>Forecast</b>: <b>trend</b> (past staffing), <b>ratio</b> (e.g. sales : staff), <b>scatter plot</b> (two variables).","Ratio: 1 rep per ₹50L sales; ₹10 cr target → 20 reps.");
+card("a2","Recruiting yield pyramid",{type:"pyramid",items:[{l:"1,200 leads",w:100,r:"6 : 1"},{l:"200 invited",w:80,r:"4 : 3"},{l:"150 interviewed",w:62,r:"3 : 2"},{l:"100 offers",w:45,r:"2 : 1"},{l:"50 hires",w:30}]},
+ "Work backwards from hires using past conversion ratios.","Need 50 hires → about 1,200 applicants.");
+card("a2","Interview questions",{type:"chips",items:[{l:"Situational",t:"“What WOULD you do…?” (future)"},{l:"Behavioural",t:"“Tell me about a time you DID…” (past)"},{l:"Job-related",t:"Relevant past job experience"},{l:"Stress",t:"Rude questions to test stress tolerance, spot hypersensitivity"}]},
+ "<b>Unstructured</b> (non-directive, free chat) vs <b>structured</b> (directive, job-related, pre-set answers — fairer).");
+card("a2","Interview formats",{type:"chips",c3:1,items:[{l:"Unstructured sequential",t:"One by one, own Qs"},{l:"Structured sequential",t:"One by one, same form"},{l:"Panel",t:"Group → 1 candidate"},{l:"Mass",t:"Panel → many (GD)"},{l:"Phone",t:"Screening"},{l:"Computer-based",t:"Answers on screen"},{l:"Web-based",t:"Video tools"}]},
+ "Formats describe <b>how</b> the interview is run.");
+card("a2","Selection tests",{type:"chips",items:[{l:"Cognitive",t:"IQ: Stanford-Binet, Wechsler; reasoning, verbal, memory, numbers"},{l:"Motor & physical",t:"Crawford Small Parts, Stromberg, Purdue Peg Board"},{l:"Personality & interest",t:"Projective: Rorschach, TAT · Non-projective: MBTI"},{l:"Achievement",t:"Job knowledge already learned"},{l:"Computerised multimedia",t:"Simulations, gamified tests"}]},
+ "Projective = you “project” your mind onto a vague picture.");
+card("a2","Reliability vs validity",{type:"compare",cols:[{h:"Reliability = consistent",items:["Test-retest","Equivalent / alternate form","Internal comparison"]},{h:"Validity = measures the right thing",items:["Criterion: scores ↔ job performance","Content: looks like the job","Construct: measures a trait that matters"]}]},
+ "A test must be both.","A clock always 10 min fast: reliable, not valid.");
+card("a2","Selection biases",{type:"chips",items:[{l:"First impressions",t:"Snap judgment anchors the rest"},{l:"Unclear job requirements",t:"Gut-feel, inconsistent"},{l:"Contrast & pressure to hire",t:"Order effect; urgency lowers bar"},{l:"Nonverbal & impression mgmt",t:"Smooth talker wins"},{l:"Personal characteristics",t:"Looks, background sway"}]},
+ "Reduce with structured interviews, clear criteria, several interviewers. Why select carefully: <b>person–job fit, person–org fit, avoid negligent hiring</b>.");
+
+/* ---------- A3 IHRM ---------- */
+card("a3","How international work evolved",{type:"steps",items:[{l:"Pre-1945",t:"East India Co.; expatriation as control"},{l:"1950s–70s",t:"MNC “company men” (Edström & Galbraith)"},{l:"1980s–90s",t:"Cost, expat failure (Tung; Harzing) → locals, TCNs"},{l:"Late 90s–2000s",t:"SIE (Suutari & Brewster); alternative forms"},{l:"2010s",t:"Global careers, edu-immigrants"},{l:"2020+",t:"Remote work; digital nomad visas",win:1}]},
+ "Locus of initiative moved <b>organisation → individual</b>. “Digital nomad” coined by Makimoto &amp; Manners (1997); Barbados and Estonia first visas (2020). Opening Q “Would you go?” → motives, barriers, support.");
+card("a3","Three faces of international work",{type:"compare",cols:[{h:"Assigned expat",items:["Org decides & pays","Return job planned","Career tied to one firm"]},{h:"Self-initiated (SIE)",items:["You decide","Hired on local terms","No guaranteed return"]},{h:"Digital nomad",items:["Location-independent","Moves every few weeks/months","Little employer support"]}]},
+ "Key Q: <b>who decides, who pays, who carries the risk?</b> (Andresen et al., 2014)","TCS sends a manager to London · Kerala nurse joins UK hospital · designer in Bali then Lisbon.");
+card("a3","Why send people abroad?",{type:"chips",c3:1,items:[{l:"Position filling",t:"No local skill"},{l:"Management development",t:"Grow future leaders"},{l:"Organisation development",t:"Control, coordination, culture"}]},
+ "<b>Edström &amp; Galbraith (1977)</b>. SIE adds personal motives: career capital, adventure, family, escape.");
+card("a3","Who goes? (Indian MNC, German unit)",{type:"chips",items:[{l:"PCN",t:"Parent-country national: Indian posted to Germany"},{l:"HCN",t:"Host-country national: German in Germany"},{l:"TCN",t:"Third-country national: Singaporean in Germany"},{l:"Inpatriate",t:"HCN/TCN brought into Indian HQ"}]},"P = Parent · H = Host · T = Third · Inpat = into HQ.");
+card("a3","Nine assignment types",{type:"table",head:["Type","Shape","Main problem"],rows:[["Long-term","Full move with family, 1–5 yrs","Very high cost, family, repatriation"],["Short-term","Project, 3–12 months, no family","Separation, burnout, tax"],["Inpatriate","HCN/TCN into HQ","Outsider status"],["Commuter","Lives home, travels weekly","Fatigue, tax complexity"],["Rotational","28 days on / 28 off, remote site","Isolation, safety"],["Frequent flyer","Short trips, no move","Travel stress, invisible to HR"],["Virtual","Cross-border via tech","Low trust, time zones"],["SIE","Own move, local hire","No package, underemployment, visas"],["Digital nomad","Weeks–months per country","Tax grey zones, permanent establishment risk"]]},
+ "Groups: <b>company-led</b> · <b>flexible</b> · <b>individual-led</b>. Each solves one problem and creates another — choose for purpose. (Collings, Scullion &amp; Morley, 2007)");
+card("a3","Staffing mindsets — EPRG",{type:"matrix",x:["Home-led","Wider"],y:["One country","Many"],xt:"Perlmutter 1969; Heenan & Perlmutter 1979",cells:[[{l:"Ethnocentric",t:"PCNs, HQ ways · + control · − glass ceiling"},{l:"Regiocentric",t:"Move within region · + integration · − silos"}],[{l:"Polycentric",t:"Locals run units · + local, cheap · − HQ gap"},{l:"Geocentric",t:"Best person anywhere · + global pool · − cost, visas",hl:1}]]},
+ "Mindsets, not just rules — a firm can be ethno in one function, geo in another. <b>Ethnocentrism signals</b>: “HQ way best”, templates exported, PCNs in every top job, HQ language &amp; time zone, HQ approval needed, locals “not yet ready”.","Global call always at 10 am IST → US staff at midnight. Geocentric fix: rotate the time.");
+card("a3","International adjustment model",{type:"compare",cols:[{h:"Before leaving (anticipatory)",items:["Prior overseas experience","Pre-departure training","Accurate expectations","Good selection criteria"]},{h:"After arriving (in-country)",items:["Self-efficacy, people skills","Role clarity, discretion","Social & logistics support","Socialisation","Spouse & family"]},{h:"3 facets",items:["Work","Interaction","General living"]}]},
+ "<b>Black, Mendenhall &amp; Oddou (1991)</b>; facets from Black &amp; Stephens (1989); Black &amp; Mendenhall (1990) made the case for training.");
+card("a3","Dual allegiance",{type:"matrix",x:["Low local","High local"],y:["High HQ","Low HQ"],xt:"Allegiance to local operation",cells:[[{l:"Hearts at home",t:"Homesick, compares with home"},{l:"Dual citizens",t:"Bridge both — the ideal",hl:1}],[{l:"Free agents",t:"Uncommitted, career-driven"},{l:"Going native",t:"Acts local, resists HQ"}]]},
+ "<b>Black &amp; Gregersen (1992)</b>, “Serving Two Masters”. An ethnocentric HQ pushes people to “hearts at home”.");
+card("a3","U-curve vs J-curve",{type:"curve",yl:"Adjustment",xl:"Time abroad",series:[{c:"a",pts:[[0,62],[14,86],[42,22],[72,58],[100,84]]},{c:"b",d:1,pts:[[0,18],[30,38],[62,62],[100,84]]}],marks:[{x:14,y:86,t:"Honeymoon"},{x:42,y:22,t:"Culture shock"},{x:72,y:58,t:"Adjustment",dx:4},{x:97,y:84,t:"Mastery",anchor:"end",dy:-8}],legend:[["a","U-curve (Lysgaard 1955; Oberg 1960; Torbiörn 1982)"],["b","J-curve: hardest at entry (Ward 1998; Zhu 2016)"]]},
+ "U from Norwegian Fulbright scholars. <b>W-curve</b> adds re-entry (Gullahorn 1963). J: no honeymoon; steady climb (Zhu 2016, 179 expats, 10 waves). Prior experience &amp; training shift the curve (Koo Moon 2012).");
+card("a3","Intelligent career competencies",{type:"chips",c3:1,items:[{l:"Knowing-why",t:"Motivation, identity"},{l:"Knowing-how",t:"Skills, cultural know-how"},{l:"Knowing-whom",t:"Network & support"}]},
+ "Arthur, Claman &amp; DeFillippi (1995). Ray &amp; Maheshwari (2022): studying abroad ≈ SIE. <b>P1</b> culture → how · <b>P2</b> multicultural groups → whom · <b>P3</b> global jobs → why.","Indian student in Germany learns German norms, makes global friends, wants an MNC career.");
+card("a3","Length vs breadth",{type:"compare",cols:[{h:"Length (P4)",items:["Years in one country","Deep know-how of that culture","Networks get dense, redundant","Fits a country-head role"]},{h:"Breadth (P5)",items:["Number of countries","Comfort with diversity","Wider networks (Granovetter 1973)","Fits a global CEO role"]}]},
+ "Talent mgmt: experience alone isn't enough (Caligiuri &amp; Tarique 2012); can replace training; match to role; long stays weaken HQ ties.");
+card("a3","Lifelines: who helps abroad",{type:"chips",items:[{l:"Host-country nationals",t:"Local know-how, practical help"},{l:"Parent-country nationals",t:"HQ link, career sponsorship"},{l:"Fellow expatriates",t:"Emotional support, tips"},{l:"Family",t:"Stability — often ignored by firms",hl:1}]},
+ "<b>Ray &amp; Maheshwari (2021)</b>: needs change by stage (before, arrival, mid, return); no single mentor meets all. Needs: career, information, emotional, practical. (Mezias &amp; Scandura 2005)");
+card("a3","Mini case: Meera in Frankfurt",{type:"chips",items:[{l:"Quadrant?",t:"Hearts at home"},{l:"Curve?",t:"J or deep U trough"},{l:"HQ mindset?",t:"Ethnocentric (appraisal exported)"},{l:"Singapore helped?",t:"Little: short, not culture-specific"},{l:"Who helps?",t:"HCN, fellow expats, PCN at HQ, spouse support"}]},
+ "IT manager, 3-yr posting, husband quit job, son 8, no training; month 4 calls Bengaluru daily, finds Germans “rude”.");
+
+/* ---------- A4 MENTORING ---------- */
+card("a4","Mentor ↔ mentee",{type:"compare",cols:[{h:"Mentor",items:["Senior, experienced","From a school of thought","Imparts wisdom & skills"]},{h:"Mentee / protégé",items:["Brings career goals","Sets the direction","Two-way: also gives back"]}]},"","HR executive guided by HR director; she teaches him new HR tools.");
+card("a4","What's in it for the mentor?",{type:"chips",items:[{l:"Fulfilment",t:"Joy of helping"},{l:"Self-esteem",t:"Experience valued"},{l:"Career progression",t:"Developing people = leadership"},{l:"Succession planning",t:"Ready successor frees you"},{l:"Networks",t:"Access to new circles"}]},"…and more, e.g. learning new tech from juniors.");
+card("a4","Two functions of mentoring",{type:"compare",cols:[{h:"Career (get ahead)",items:["Exposure","Networking","Sponsorship","Coaching","Protection"]},{h:"Psychosocial (grow as a person)",items:["Counselling","Friendship","Role-modelling"]}]},
+ "<b>Coaching sits inside the career function</b> — specific skills; mentoring covers the whole career and person.");
+card("a4","Choosing & making it work",{type:"steps",items:[{l:"Similarity",t:"Demographics, education, city, college, gender"},{l:"Expectations",t:"Agree early: frequency, focus, confidentiality"},{l:"Exit",t:"Plan an ending that adds value",win:1}]},
+ "Most important: <b>values congruence</b> — shared values deepen the bond.");
+card("a4","Developmental network",{type:"compare",cols:[{h:"Strong ties",items:["High closeness","Frequent contact","Trust, sponsorship"]},{h:"Weaker ties",items:["Occasional","New information","New opportunities"]}]},
+ "<b>Multiplicity of mentors</b>: no single mentor serves every function.","Boss (sponsor) + professor (counsel) + conference contact (info).");
+card("a4","Phases of a mentoring relationship",{type:"curve",yl:"Intensity",xl:"Time",series:[{c:"a",pts:[[0,8],[25,52],[48,90],[72,50],[100,44]]},{c:"r",d:1,pts:[[48,90],[56,6]]}],marks:[{x:8,y:20,t:"Initiation"},{x:30,y:70,t:"Growth",anchor:"end"},{x:72,y:50,t:"Decline",dy:-8},{x:97,y:44,t:"Redefinition",anchor:"end",dy:-8},{x:58,y:12,t:"Breach of trust",dx:4}]},
+ "Normal path: initiation → growth → decline → redefinition. <b>Breach of trust</b> → abrupt fall.");
+
+/* ---------- A5 L&D ---------- */
+card("a5","Why invest in L&D",{type:"chips",items:[{l:"Attract & retain talent"},{l:"Build people capabilities"},{l:"Values-based culture"},{l:"Employer brand"},{l:"Motivation & engagement"}]},
+ "Plan with 5 factors: <b>Whom · What · When · Why · How</b>.","Freshers pick Infosys for its training; HUL called a “CEO factory”.");
+card("a5","Types of knowledge",{type:"matrix",x:["Generally available","Unique to firm"],y:["High value","Low value"],xt:"Uniqueness",cells:[[{l:"Compulsory",t:"Needed to compete, no edge"},{l:"Core",t:"Retain & develop it + its people",hl:1}],[{l:"Ancillary",t:"Outsource or automate"},{l:"Idiosyncratic",t:"May become core; R&D alliances"}]]},
+ "Strategic value × uniqueness.","Core: Amul's co-op supply chain. Ancillary: payroll.");
+card("a5","Explicit vs tacit",{type:"compare",cols:[{h:"Explicit (codified)",items:["Know you have it","Formal, systematic","Manuals, databases, blueprints (“collections”)","Low marginal cost to share"]},{h:"Tacit",items:["In people's heads","Hard to write down","Shared via networks & connections"]}]},"","Recipe card vs a chef knowing when the curry is right.");
+card("a5","Kolb's learning cycle",{type:"cycle",hub:"Experiential learning",items:[{l:"Concrete Experience",t:"Do something new"},{l:"Reflective Observation",t:"Look back"},{l:"Abstract Conceptualisation",t:"Form a lesson"},{l:"Active Experimentation",t:"Try it out"}]},
+ "A loop: do → reflect → conclude → try again.","Chaotic first meeting → reflect → “need an agenda” → try an agenda.");
+card("a5","Four learning styles",{type:"matrix",x:["Feeling (CE)","Thinking (AC)"],y:["Watching (RO)","Doing (AE)"],xt:"Kolb",cells:[[{l:"Diverging",t:"Many angles, imaginative, brainstorms"},{l:"Assimilating",t:"Logical, ideas over people"}],[{l:"Accommodating",t:"Hands-on, intuitive, new challenges"},{l:"Converging",t:"Practical problem-solver, technical"}]]},"Each style = two neighbouring stages.");
+card("a5","Training process — ADDIE",{type:"steps",items:[{l:"Analysis",t:"Training needs analysis"},{l:"Design",t:"Objectives, environment"},{l:"Develop",t:"Content, materials, methods"},{l:"Implement",t:"Deliver"},{l:"Evaluate",t:"Reactions, learning, job change",win:1}]},
+ "<b>Training</b> = systematic change in <b>knowledge, skills, attitudes</b> for individual, team &amp; org effectiveness.");
+card("a5","Training needs analysis",{type:"chips",items:[{l:"Strategic TNA",t:"Skills for future roles & strategy"},{l:"Task analysis",t:"Break a job into required skills"},{l:"Competency model",t:"One diagram of needed competencies"},{l:"Performance analysis",t:"Verify gap: train, or another fix (transfer)",hl:1}]},
+ "Current &amp; new employees' TNA improves today's performance. Can't do → train; won't do → other fix.");
+card("a5","Designing the programme",{type:"chips",c3:1,items:[{l:"Learning objectives"},{l:"Motivating environment"},{l:"Meaningful learning"},{l:"Easy skill transfer"},{l:"Reinforcement"},{l:"Transfer to job"},{l:"Other issues",t:"Budget, venue, mode"}]},"Then <b>Develop</b>: choose content + instructional methods.");
+card("a5","Training techniques",{type:"chips",c3:1,items:[{l:"On-the-job"},{l:"Apprenticeship"},{l:"Informal learning"},{l:"Job instruction",t:"Steps in sequence"},{l:"Lectures"},{l:"Programmed learning",t:"Q → answer → feedback"},{l:"Audio-visual"},{l:"Vestibule",t:"Mock workplace"},{l:"EPSS",t:"On-the-job digital help"},{l:"Video conferencing"},{l:"CBT"},{l:"Simulation"},{l:"Interactive"},{l:"Internet-based"},{l:"Team training"}]},"Plus <b>onboarding &amp; orientation</b> for new joiners.");
+card("a5","Evaluating training",{type:"steps",items:[{l:"1 · Reactions",t:"Did they like it?"},{l:"2 · Learning",t:"Did they learn? (pre/post test)"},{l:"3 · Behaviour & results",t:"Did work change?",win:1}]},"Liking ≠ learning ≠ changed behaviour.");
+card("a5","Training vs development",{type:"compare",cols:[{h:"Training",items:["Current job","Knowledge, skills, attitudes","Short-term"]},{h:"Development",items:["Personal growth & future roles","Knowledge or skills","Long-term"]}]},
+ "<b>Management development</b>: assess strategic needs → appraise managers → develop current &amp; future managers.","New machine training vs hospital-management course for a future superintendent.");
+
+/* ---------- A6 JOB EVALUATION ---------- */
+card("a6","Fair inside, competitive outside",{type:"compare",cols:[{h:"Internal equity",items:["Fair vs other jobs in the firm","Answered by job evaluation"]},{h:"External equity",items:["Fair vs same job elsewhere","Answered by salary surveys"]}]},"Job evaluation rates the <b>job, not the person</b>. The point method links the two.");
+card("a6","Four job evaluation methods",{type:"matrix",x:["Whole job","Factor by factor"],y:["Non-quantitative","Quantitative"],xt:"Approach",cells:[[{l:"Ranking",t:"Order only; small firms"},{l:"Classification",t:"Predefined grades; govt pay scales"}],[{l:"Factor comparison",t:"Money per factor; complex, rare"},{l:"Point method",t:"Points per factor; most used",hl:1}]]},"Hay Guide Chart (now Korn Ferry) = proprietary point method.");
+card("a6","Point method: core idea",{type:"steps",items:[{l:"Compensable factors",t:"What the firm pays for"},{l:"Degrees",t:"Levels in each factor"},{l:"Points",t:"Per degree"},{l:"Job total",t:"Sum → pay grade",win:1}]},
+ "<b>8 steps</b>: analyse jobs (benchmarks) → choose 3–6 factors → define degrees → weight → assign points → manual → committee evaluates → price jobs.");
+card("a6","Compensable factors",{type:"chips",items:[{l:"Skill",t:"Education, experience, expertise"},{l:"Effort",t:"Physical & mental"},{l:"Responsibility",t:"People, money, decisions, customers"},{l:"Working conditions",t:"Hazards, environment, travel"}]},
+ "From the <b>US Equal Pay Act</b>. Hay uses know-how, problem solving, accountability. Good factor: in all jobs, valued, observable &amp; distinct, acceptable.");
+card("a6","Degrees: customer responsibility",{type:"ladder",items:[{l:"D5 Branch / regional manager",t:"Accountable for all customer relationships",c:"a"},{l:"D4 Relationship manager",t:"High-value clients, approves exceptions",c:"a"},{l:"D3 Customer service rep",t:"Owns a portfolio, cross-sells",c:"a"},{l:"D2 Teller",t:"Solves standard queries, escalates",c:"a"},{l:"D1 Trainee cashier",t:"Routine work, close supervision",c:"a"}]},"Write degrees as <b>observable</b> differences — like <b>BARS</b> anchors.");
+card("a6","The 500-point plan",{type:"bars",items:[{l:"Skill 40%",v:200,max:200,t:"40 → 200"},{l:"Responsibility 30%",v:150,max:200,t:"30 → 150"},{l:"Effort 20%",v:100,max:200,t:"20 → 100"},{l:"Conditions 10%",v:50,max:200,t:"10 → 50"}]},"Max points = <b>weight × total</b>. Steps: <b>arithmetic</b> (equal) or <b>geometric</b> (widening).");
+card("a6","Worked example: bank branch",{type:"bars",items:[{l:"Teller",v:220,max:500,t:"80+60+60+20 = 220"},{l:"Customer service rep",v:290,max:500,t:"120+90+60+20 = 290"},{l:"Branch manager",v:450,max:500,t:"200+150+80+20 = 450"}]},"Branch manager's job ≈ twice the teller's.");
+card("a6","Wage curve",{type:"curve",yl:"Pay",xl:"Job points",series:[{c:"a",pts:[[5,12],[95,88]],line:1}],dots:[[20,24,"m"],[35,35,"m"],[50,50,"m"],[65,61,"m"],[80,76,"m"],[55,28,"g"],[30,58,"r"]],marks:[{x:55,y:28,t:"Green circle: raise",dx:6,dy:4},{x:30,y:58,t:"Red circle: freeze",dx:6,dy:-4}]},
+ "Plot points vs pay → best-fit line. <b>Pay grades</b>: point bands with min–mid–max, ±15% around midpoint (e.g. Grade B 200–299 pts, ₹5.1L–₹6.9L). + transparent, consistent, defensible · − costly, judgement in numbers, rigid. “Points make judgement visible; they don't remove it.”");
+
+/* ---------- B1 INTRO ---------- */
+card("b1","What HRM is & why study it",{type:"compare",cols:[{h:"HRM is",items:["Hiring, T&D, appraisal, pay, safety, welfare, IR","Strategic: aligns HR with goals","A change agent","Right people = differentiator"]},{h:"Why study it",items:["People are the core advantage — talent can't be duplicated","Human capital over machines: machines need skilled people"]}]},"","Any airline can lease a plane; it can't copy an on-time operations team.");
+card("b1","15 HRM functions",{type:"chips",c3:1,items:[{l:"HR planning"},{l:"Recruitment & selection"},{l:"Promotion & transfer"},{l:"Training & development"},{l:"Job design & analysis"},{l:"Career development"},{l:"Communication"},{l:"Merit rating"},{l:"Employee welfare"},{l:"HR costing & audit"},{l:"Labour relations"},{l:"Disciplinary action"},{l:"Grievance handling"},{l:"Rewards & benefits"},{l:"Job evaluation"}]},"");
+card("b1","Outsourcing HR",{type:"compare",cols:[{h:"What's outsourced",items:["Hiring","Training","Payroll","Benefits admin","Statutory records"]},{h:"Triggers",items:["Downsizing","Rapid growth / decline","Globalisation","Competition","Restructuring"]}]},"Goal: cut costs, free HR for value-added work. <b>72%</b> of Indian firms outsource. Debate: can a firm run on perfunctory HR?");
+card("b1","HRM paradoxes",{type:"chips",items:[{l:"Rhetoric vs reality",t:"Praised as strategic, practised as routine"},{l:"Cosmetic change",t:"High in talk, low in practice"},{l:"Weaker than finance/marketing",t:"Partly HR's own fault"},{l:"Not despair",t:"Cognate body puts HRM at the core of employment",hl:1}]},"");
+card("b1","HR policies",{type:"chips",items:[{l:"Consistency",t:"Same treatment, less favouritism"},{l:"Continuity",t:"Survives leadership changes"},{l:"Performance standard",t:"Results compared with policy"},{l:"Motivation & loyalty"}]},"Examples: employment terms (pay, hours, overtime, promotion, transfer, lay-off), medical (ESI, sickness benefits), training.");
+card("b1","Evolution & career ladder",{type:"steps",items:[{l:"HR Specialist",t:"Entry"},{l:"Shared Services",t:"Optimises transactions"},{l:"HR Manager",t:"Generalist"},{l:"HR Business Partner",t:"Shapes strategy"},{l:"Head–HR",t:"Top executive",win:1}]},
+ "Personnel mgmt → HRM in the <b>1970s</b>; India after WWII &amp; Independence. 1980s tech · 1990s human values · 2000s demographics &amp; skills · today VP/EVP on the executive committee. <b>Human capital</b> = knowledge, skills, abilities, values; <b>HCM</b> manages through insight, not just metrics.");
+
+/* ---------- B2 SHRM ---------- */
+card("b2","What SHRM does",{type:"chips",items:[{l:"Align with long-term goals"},{l:"Structure, culture, values, commitment"},{l:"Employee value proposition",t:"Plus design, communication"},{l:"Well-being"},{l:"Attract, develop, reward, retain"},{l:"Integration is rare",hl:1}]},"<b>Strategy</b> = future plan to meet objectives. <b>Strategic management</b> = scan inside &amp; outside, <b>SWOT</b>, long-term strategy + annual targets.");
+card("b2","Strategic management process",{type:"cycle",hub:"Usually non-linear",items:[{l:"Understand strategy",t:"Targets, tolerance limits"},{l:"Scan",t:"Internal + PEST-type external"},{l:"Formulate",t:"Written; adjust deviations"},{l:"Implement",t:"Resources, rewards, culture"}]},
+ "<b>Competitive advantage</b> = profit above industry average; <b>sustained</b> over years (skilled labour, differentiation, innovation, share, cost).");
+card("b2","SHRM framework",{type:"steps",items:[{l:"Strategy + institutional forces"},{l:"HR practices"},{l:"HR capital pool",t:"Skills, abilities"},{l:"HR behaviours"},{l:"Firm outcomes",t:"Performance, satisfaction, absenteeism",win:1}]},"");
+card("b2","Theories behind SHRM",{type:"chips",items:[{l:"Resource-based",t:"Unique resources → advantage"},{l:"Behavioural",t:"Coalitions; satisficing (good enough)"},{l:"Cybernetics",t:"Feedback loops, self-regulating"},{l:"Resource dependence",t:"Reduce reliance on environment"},{l:"Institutional",t:"Adopt practices for legitimacy"},{l:"Agency / transaction cost",t:"Align employees with owners"}]},"");
+
+/* ---------- B3 RECRUITMENT ---------- */
+card("b3","Recruitment: why & how",{type:"steps",items:[{l:"Requisition",t:"Manager's approved request"},{l:"Planning",t:"Number & type: temps, campus, walk/write/talk-ins, consultants, displaced persons"},{l:"Strategy",t:"Make or buy, tech, labour markets, sources, sequence"},{l:"Shortlist",t:"Only those meeting requirements",win:1}]},
+ "<b>Why</b>: plan needs · bigger pool at low cost · fewer under/over-qualified · fewer quick quits · legal &amp; social obligations.");
+card("b3","Sources",{type:"compare",cols:[{h:"Internal",items:["Present employees","Referrals","Former employees","Previous applicants"]},{h:"External",items:["Professional associations","Ads","Employment exchanges","Campus, walk-ins","M&A, competitors","Social media, website"]}]},"");
+card("b3","Costs, evaluation, alternatives",{type:"compare",cols:[{h:"Costs",items:["Recruiter salaries","Mgmt time (JD, spec, ads)","Ad / agency fees","Overheads","Overtime while vacant"]},{h:"Evaluate by",items:["Return rate","Suitable candidates","Retention & performance","Cost, time-lapse","Image projected"]},{h:"Alternatives",items:["Overtime","Employee leasing","Temps, interns","Gig work, outsourcing","Predictive analytics"]}]},"","Swiggy uses gig riders instead of permanent hiring.");
+
+/* ---------- B4 TALENT DEV ---------- */
+card("b4","New-hire orientation",{type:"compare",cols:[{h:"Why invest",items:["Anchoring bias: first impressions stick","Professional identity","Employer branding","HR as neutral party"]},{h:"Poorly designed",items:["Uninterested manager","Information overload","Work on day 1, no context","Menial tasks","Trial by fire"]}]},"Covers routine, history, products, role, policies. Tech makes it virtual, cheaper, customised.");
+card("b4","Talent development techniques",{type:"chips",items:[{l:"Needs assessment",t:"Observe, manuals, SME interviews, focus groups"},{l:"On-the-job",t:"Hands-on, supervised"},{l:"Off-the-job",t:"Lectures, cases, simulation"},{l:"Out-bound",t:"MOOCs"},{l:"Micro / nano-learning & gamification",t:"e.g. BMW"}]},"Training is an advantage when the gap is <b>ability, not willingness</b>, the link is visible, and staff see it as investment. Not when there's no metric.");
+card("b4","Training ROI & break-even",{type:"curve",yl:"₹ lakh",xl:"Months",ymax:10,series:[{c:"b",pts:[[0,30],[25,50],[100,50]],line:1},{c:"g",pts:[[0,0],[42,50],[100,100]],line:1}],vline:{x:42,t:"Break-even ≈ month 5"},legend:[["b","Cumulative cost (₹5L by month 3)"],["g","Cumulative gains (₹10L by month 12)"]]},"Before break-even: net investment (loss). After: positive ROI. (10 − 5) ÷ 5 = 100% by month 12.");
+card("b4","Ebbinghaus forgetting curve",{type:"curve",yl:"Memory %",xl:"Days",series:[{c:"r",d:1,pts:[[0,100],[6,52],[20,35],[50,25],[100,20]]},{c:"a",pts:[[0,100],[4,55],[4.1,100],[12,70],[12.1,100],[28,80],[28.1,100],[56,90],[56.1,100],[100,95]],line:1}],legend:[["r","No review: ~50% gone in a day"],["a","With repetitions (days 1, 5, 12, 25)"]]},"Increase stickiness with periodic reinforcement.");
+
+/* ---------- B5 PM ---------- */
+card("b5","Appraisal vs management",{type:"compare",cols:[{h:"Performance appraisal",items:["Reactive, top-down","Annual event","Looks backward","Report card"]},{h:"Performance management",items:["Proactive, continuous","Looks forward","Ongoing feedback & coaching","Links daily goals to strategy"]}]},"Appraisal objectives: promotion / termination, confirm probationers, T&amp;D needs, expectation vs reality.");
+card("b5","Rating biases",{type:"chips",items:[{l:"Recency",t:"Last few weeks dominate"},{l:"Primacy",t:"First impression anchors"},{l:"Halo + confirmation",t:"One strength colours all"},{l:"Central tendency",t:"Everyone rated average"},{l:"Similarity",t:"“Like me” rated higher"}]},"","Strong December hides a weak year (recency).");
+card("b5","Appraisal methods",{type:"compare",cols:[{h:"Traditional",items:["Ranking","Paired comparison","Man-to-man comparison","Grading","Forced distribution"]},{h:"Modern",items:["MBO","360° / multi-source","Assessment centre","BARS"]},{h:"Other",items:["Spontaneous & unrestricted"]}]},"Design for accuracy: train raters, specific behaviours, <b>SMART</b> goals, document as it happens, checklists, know your biases.");
+card("b5","When PM fails & what's next",{type:"compare",cols:[{h:"Poor PM",items:["No accountability for ratings","Vague criteria","Talk only at appraisal","Appeasing bosses","No grievance support"]},{h:"Challenges",items:["Align goals & aspirations","Career paths for stars","Plateaued performers","Dial up / down"]},{h:"Future",items:["Real-time micro-feedback","Gamification badges","AI sentiment analysis"]}]},"");
+
+/* ---------- B6 IR ---------- */
+card("b6","Industrial relations",{type:"chips",items:[{l:"Mutual co-existence",t:"Capital & labour interdependent"},{l:"No asymmetric exploitation",t:"Law checks management power"},{l:"Tripartite rule of law",t:"State enforces accountability"}]},"<b>IR</b> = management–worker relations + dispute-resolution machinery: collective bargaining, unions, govt, grievance &amp; discipline, labour law.");
+card("b6","Parties in IR",{type:"chips",c3:1,items:[{l:"Employees"},{l:"Employers"},{l:"Employers' associations",t:"e.g. CII, FICCI"},{l:"Trade unions",t:"Fix bargaining imbalance"},{l:"Judiciary",t:"Settle disputes"},{l:"State",t:"Regulator, mediator, employer"}]},"Factors — <b>internal</b>: managers' skill, prosperity, tech change, org architecture &amp; power · <b>external</b>: union militancy, pay, law, socio-political ecology.");
+card("b6","Leadership choices",{type:"steps",items:[{l:"Adversarial",t:"Zero-sum"},{l:"Arm's length",t:"Transactional compliance"},{l:"Partnership",t:"Joint value creation",win:1}]},
+ "Postures: <b>union substitution</b> (match benefits) vs <b>suppression</b> (block unions). Why firms want to be union-free: lost managerial prerogative, cost inflexibility, less strategic agility. Leverage shifted by liberalisation, services, contract work.");
+card("b6","Disputes & new labour code",{type:"compare",cols:[{h:"Industrial Disputes Act 1947",items:["Interest disputes: new terms","Rights disputes: existing terms","Inter-union rivalry: no secret ballot for sole agent","Tech resistance = rational defence"]},{h:"Code on Social Security 2020",items:["Merges 9 laws (PF, ESI, gratuity)","Covers gig & platform workers","Digital-first","Retention & employer brand"]}]},"");
+
+/* ---------- B7 POSH ---------- */
+card("b7","Reardon's 6-level spectrum (SSMW)",{type:"ladder",items:[{l:"6 Egregious",t:"Coercion, assault → termination, legal",c:"r"},{l:"5 Evident misconduct",t:"Propositions, quid pro quo → act now",c:"r"},{l:"4 Highly offensive",t:"Hostile, microaggressions → formal HR",c:"b"},{l:"3 Offensive",t:"Persistent, toxic → escalate",c:"b"},{l:"2 Awkward",t:"Clumsy jokes → set boundary",c:"w"},{l:"1 Not offensive",t:"Professional compliments",c:"g"}]},
+ "Compliance training misses <b>grey areas</b>; misconduct is a <b>spectrum</b>. Shift from reactive lawsuit prevention to <b>proactive risk management</b>. Cases: Bhanwari Devi, Phaneesh Murthy, RK Pachauri.");
+card("b7","Four contextual modifiers",{type:"chips",items:[{l:"Power & hierarchy",t:"Peer joke ≠ executive's"},{l:"Tone of delivery",t:"Professional vs suggestive"},{l:"History & rapport",t:"Years of trust vs new hire"},{l:"Setting & channel",t:"Late-night, WhatsApp, Slack amplify risk"}]},"Class cases: late-night text + solo dinner · off-site “family” joke · drifting Slack/Teams DMs.");
+
+/* ---------- B8 ETHICS ---------- */
+card("b8","Regulation vs meaning",{type:"compare",cols:[{h:"Crisis of meaning",items:["Paradox of perks","Engagement illusion","Burnout cycle"]},{h:"Limits of control",items:["Illusion of surveillance","Compliance loophole"]}]},"Regulatory imperative (top-down equity) vs existential gap (burnout, hollowness) → integrate both.");
+card("b8","Three kinds of justice",{type:"chips",c3:1,items:[{l:"Distributive",t:"Fair outcomes"},{l:"Procedural",t:"Fair process"},{l:"Interactional",t:"Dignity, respect"}]},"<b>Ethics</b> = moral code governing employment practices.","Equal pay · clear layoff criteria · delivering bad news respectfully.");
+card("b8","Indian ethos & work as worship",{type:"steps",items:[{l:"Character over rules",t:"Vivekananda: work refines character"},{l:"Internal locus of control",t:"Ethical when unmonitored"},{l:"Karma Yoga",t:"Absorption, equanimity, detachment from outcomes"},{l:"Job crafting",t:"Reshape tasks; autonomous design",win:1}]},
+ "Western <b>PERMA</b> (Seligman: positive emotion, engagement, relationships, meaning, achievement) + self-determination theory. Character over competence: toxic competence, character stability, <b>Spiritual Quotient</b>.");
+
+/* ===================== FLASHCARD POOL ===================== */
+function strip(s){return (s||"").replace(/<[^>]+>/g,"").replace(/&amp;/g,"&").trim()}
+const F=[];
+C.forEach(c=>{
+  const v=c.v, add=(term,def)=>{if(term&&def&&def.length>3)F.push({m:c.m,topic:c.t,term:strip(term),def:strip(def)})};
+  if(v.type==="chips"||v.type==="steps"||v.type==="ladder"||v.type==="cycle") v.items.forEach(i=>add(i.l,i.t));
+  if(v.type==="matrix") v.cells.flat().forEach(i=>add(i.l,i.t));
+  if(v.type==="table") v.rows.forEach(r=>add(r[0],r[1]+" · "+r[2]));
+  if(v.type==="compare") v.cols.forEach(col=>add(col.h,col.items.join(" · ")));
+});
+F.push({m:"a1",topic:"VRIO",term:"VRIO",def:"Valuable, Rare, Inimitable, Organised — pass all four for sustained advantage"});
+F.push({m:"a2",topic:"Yield pyramid",term:"Yield pyramid ratios",def:"Leads→invited 6:1 · invited→interviewed 4:3 · interviewed→offers 3:2 · offers→hires 2:1"});
+F.push({m:"a5",topic:"ADDIE",term:"ADDIE",def:"Analysis, Design, Develop, Implement, Evaluate"});
+F.push({m:"b8",topic:"PERMA",term:"PERMA (Seligman)",def:"Positive emotion, Engagement, Relationships, Meaning, Achievement"});
+
+/* ===================== STATE ===================== */
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let done=new Set(store.get("hrm-done",[]));
+let known=new Set(store.get("hrm-known",[]));
+let curMod="all", mode="info", query="";
+
+/* ===================== RENDERERS ===================== */
+const esc=s=>s;
+function vSteps(v){return `<div class="steps">${v.items.map((i,k)=>`<div class="step${i.win?" win":""}"><div class="n">${v.gate?"GATE ":"STEP "}${k+1}</div><div class="l">${i.l}</div>${i.t?`<div class="t">${i.t}</div>`:""}${i.f?`<div class="f">${i.f}</div>`:""}</div>`).join("")}</div>`}
+function vChips(v){return `<div class="chips${v.c3?" c3":""}">${v.items.map(i=>`<div class="chip${i.hl?" hl":""}"><div class="l">${i.l}</div>${i.t?`<div class="t">${i.t}</div>`:""}</div>`).join("")}</div>`}
+function vCompare(v){return `<div class="compare">${v.cols.map(c=>`<div class="col"><h4>${c.h}</h4><ul>${c.items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`).join("")}</div>`}
+function vMatrix(v){
+  const cl=i=>`<div class="cell${i.hl?" hl":""}"><div class="l">${i.l}</div><div class="t">${i.t}</div></div>`;
+  return `<div class="matrix"><div></div><div class="ax">${v.x[0]}</div><div class="ax">${v.x[1]}</div>
+  <div class="ax ay">${v.y[0]}</div>${cl(v.cells[0][0])}${cl(v.cells[0][1])}
+  <div class="ax ay">${v.y[1]}</div>${cl(v.cells[1][0])}${cl(v.cells[1][1])}
+  ${v.xt?`<div class="cap">${v.xt}</div>`:""}</div>`}
+function vPyr(v){return `<div class="pyr">${v.items.map(i=>`<div class="lv" style="width:${i.w}%">${i.l}</div>${i.r?`<div class="rt">↓ ${i.r}</div>`:""}`).join("")}</div>`}
+function vLadder(v){const col={a:"var(--accent)",b:"var(--accent2)",r:"var(--bad)",g:"var(--good)",w:"var(--warn)"};
+  return `<div class="ladder">${v.items.map(i=>`<div class="rung"><div class="b" style="background:${col[i.c]||col.a}">${i.l.match(/^[A-Z]?\d/)?i.l.match(/^[A-Z]?\d/)[0]:"•"}</div><div class="x"><div class="l">${i.l.replace(/^[A-Z]?\d\s*/,"")}</div><div class="t">${i.t}</div></div></div>`).join("")}</div>`}
+function vBars(v){return `<div class="bars">${v.items.map(i=>`<div class="barrow"><div>${i.l}</div><div class="track"><div class="fill" style="width:${(i.v/i.max*100).toFixed(0)}%"></div><div class="val">${i.t||i.v}</div></div></div>`).join("")}</div>`}
+function vTable(v){return `<div class="tbl"><table><thead><tr>${v.head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${v.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`}
+function vCycle(v){
+  const n=v.items.length, pos=[];
+  for(let k=0;k<n;k++){const a=-Math.PI/2+2*Math.PI*k/n;pos.push([50+34*Math.cos(a),50+36*Math.sin(a)])}
+  const id="ah"+Math.random().toString(36).slice(2,7);
+  let arcs="";
+  for(let k=0;k<n;k++){const a1=-Math.PI/2+2*Math.PI*(k+0.32)/n,a2=-Math.PI/2+2*Math.PI*(k+0.68)/n;
+    const x1=50+34*Math.cos(a1),y1=50+36*Math.sin(a1),x2=50+34*Math.cos(a2),y2=50+36*Math.sin(a2);
+    arcs+=`<path d="M${x1} ${y1} A34 36 0 0 1 ${x2} ${y2}" fill="none" stroke="var(--accent2)" stroke-width="0.9" marker-end="url(#${id})"/>`}
+  return `<div class="cyc"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--accent2)"/></marker></defs>${arcs}</svg>
+  ${v.items.map((i,k)=>`<div class="node" style="left:${pos[k][0]}%;top:${pos[k][1]}%"><div class="l">${i.l}</div>${i.t?`<div class="t">${i.t}</div>`:""}</div>`).join("")}
+  <div class="hub">${v.hub||""}</div></div>`}
+function vCurve(v){
+  const W=320,H=175,L=30,R=312,T=12,B=146;
+  const X=x=>L+(R-L)*x/100, Y=y=>B-(B-T)*y/100;
+  const smooth=pts=>{if(pts.length<3)return "M"+pts.map(p=>X(p[0])+" "+Y(p[1])).join(" L");
+    let d=`M${X(pts[0][0])} ${Y(pts[0][1])}`;
+    for(let i=0;i<pts.length-1;i++){const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+      const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6],c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+      d+=` C${X(c1[0])} ${Y(c1[1])} ${X(c2[0])} ${Y(c2[1])} ${X(p2[0])} ${Y(p2[1])}`}return d};
+  const lin=pts=>"M"+pts.map(p=>X(p[0])+" "+Y(p[1])).join(" L");
+  let s=`<svg class="plot" viewBox="0 0 ${W} ${H}" role="img" aria-label="${v.yl} over ${v.xl}">
+  <line class="axis" x1="${L}" y1="${T}" x2="${L}" y2="${B}"/><line class="axis" x1="${L}" y1="${B}" x2="${R}" y2="${B}"/>
+  <text class="axl" x="${L}" y="${B+16}">${v.xl} →</text><text class="axl" transform="translate(${L-10} ${B}) rotate(-90)">${v.yl} →</text>`;
+  if(v.ymax){[0,5,10].forEach(t=>{s+=`<text class="axl" x="${L-4}" y="${Y(t/v.ymax*100)+3}" text-anchor="end">${t}</text>`})}
+  if(v.vline){s+=`<line x1="${X(v.vline.x)}" y1="${T}" x2="${X(v.vline.x)}" y2="${B}" class="axis dash" style="stroke:var(--muted)"/><text class="lbl" x="${X(v.vline.x)+4}" y="${T+10}">${v.vline.t}</text>`}
+  v.series.forEach(se=>{s+=`<path class="ln s-${se.c}${se.d?" dash":""}" d="${se.line?lin(se.pts):smooth(se.pts)}"/>`});
+  (v.dots||[]).forEach(d=>{s+=`<circle cx="${X(d[0])}" cy="${Y(d[1])}" r="${d[2]==="m"?3.5:5}" class="d-${d[2]}"/>`});
+  (v.marks||[]).forEach(m=>{const px=X(m.x),py=Y(m.y);s+=`<circle cx="${px}" cy="${py}" r="2.8" class="d-b"/><text class="lbl" x="${px+(m.dx||0)}" y="${py+(m.dy!==undefined?m.dy:-7)}" text-anchor="${m.anchor||(m.dx?"start":"middle")}">${m.t}</text>`});
+  s+="</svg>";
+  if(v.legend)s+=`<div class="legend">${v.legend.map(l=>`<span><i style="background:var(--${{a:"accent",b:"accent2",g:"good",r:"bad",m:"muted"}[l[0]]})"></i>${l[1]}</span>`).join("")}</div>`;
+  return s}
+const R={steps:vSteps,chips:vChips,compare:vCompare,matrix:vMatrix,pyramid:vPyr,ladder:vLadder,bars:vBars,table:vTable,cycle:vCycle,curve:vCurve};
+
+/* ===================== INFO VIEW ===================== */
+const rail=document.getElementById("rail");
+function modCount(id){const cs=C.filter(c=>c.m===id);return [cs.filter(c=>done.has(c.id)).length,cs.length]}
+function drawRail(){
+  let h=`<button data-m="all" aria-pressed="${curMod==="all"}">All modules<span class="pc">${done.size}/${C.length}</span></button><span class="sep">PART A</span>`;
+  MODS.forEach((m,k)=>{if(k===6)h+=`<span class="sep">PART B</span>`;const [d,t]=modCount(m.id);h+=`<button data-m="${m.id}" aria-pressed="${curMod===m.id}">${m.n}<span class="pc">${d}/${t}</span></button>`});
+  rail.innerHTML=h}
+rail.addEventListener("click",e=>{const b=e.target.closest("button[data-m]");if(!b)return;curMod=b.dataset.m;
+  if(mode==="flash"){fcMod.value=curMod;buildDeck()} if(mode==="quiz"){qzMod.value=curMod}
+  drawRail();drawInfo();window.scrollTo({top:0,behavior:"smooth"})});
+function match(c){if(!query)return true;const hay=(c.t+" "+strip(c.k)+" "+(c.eg||"")+" "+JSON.stringify(c.v)).toLowerCase();return query.split(/\s+/).every(w=>hay.includes(w))}
+function drawInfo(){
+  const box=document.getElementById("v-info");let h="";
+  MODS.forEach(m=>{
+    if(curMod!=="all"&&curMod!==m.id)return;
+    const cs=C.filter(c=>c.m===m.id&&match(c));if(!cs.length)return;
+    const [d,t]=modCount(m.id);
+    h+=`<div class="mhead"><div><div class="tag">Part ${m.p} · ${m.s}</div><h2>${m.n}</h2></div><div class="prog"><div class="meter"><i style="width:${t?d/t*100:0}%"></i></div>${d}/${t} revised</div></div><div class="grid">`;
+    cs.forEach(c=>{const isD=done.has(c.id);
+      h+=`<article class="card${isD?" done":""}" data-id="${c.id}"><div class="chead"><h3>${c.t}</h3><button class="tick" data-tick="${c.id}" aria-pressed="${isD}">${isD?"✓ Revised":"Mark revised"}</button></div>
+      <div class="viz">${R[c.v.type](c.v)}</div>${c.k?`<p class="kw">${c.k}</p>`:""}
+      ${c.eg?`<details class="eg"><summary>Example</summary><p>${c.eg}</p></details>`:""}</article>`});
+    h+="</div>"});
+  box.innerHTML=h||`<div class="empty">No topics match “${query}”. Try a shorter word.</div>`}
+document.getElementById("v-info").addEventListener("click",e=>{const b=e.target.closest("[data-tick]");if(!b)return;const id=b.dataset.tick;
+  done.has(id)?done.delete(id):done.add(id);store.set("hrm-done",[...done]);drawRail();drawInfo()});
+document.getElementById("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();if(mode!=="info")setMode("info");drawInfo()});
+
+/* ===================== FLASHCARDS ===================== */
+const fcMod=document.getElementById("fc-mod"),qzMod=document.getElementById("qz-mod");
+[fcMod,qzMod].forEach(s=>{s.innerHTML=`<option value="all">All modules</option>`+MODS.map(m=>`<option value="${m.id}">${m.p}: ${m.n}</option>`).join("")});
+let deck=[],di=0,weakOnly=false;
+const key=f=>f.m+"|"+f.term;
+function buildDeck(shuffle){deck=F.filter(f=>(fcMod.value==="all"||f.m===fcMod.value)&&(!weakOnly||!known.has(key(f))));
+  if(shuffle)for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}
+  di=0;showCard()}
+const flip=document.getElementById("flip");
+function modName(id){return MODS.find(m=>m.id===id).n}
+function showCard(){flip.classList.remove("on");
+  const cnt=document.getElementById("fc-count");
+  if(!deck.length){document.getElementById("fc-term").textContent=weakOnly?"Nothing left to review":"No cards";document.getElementById("fc-def").textContent="Switch off “Only cards to review” or pick another module.";document.getElementById("fc-m1").textContent="";cnt.textContent="";return}
+  const f=deck[di];document.getElementById("fc-m1").textContent=modName(f.m)+" · "+f.topic;document.getElementById("fc-m2").textContent=f.term;
+  document.getElementById("fc-term").textContent=f.term;document.getElementById("fc-def").textContent=f.def;
+  const pool=F.filter(x=>fcMod.value==="all"||x.m===fcMod.value);
+  cnt.textContent=`Card ${di+1} of ${deck.length} · ${pool.filter(x=>known.has(key(x))).length} of ${pool.length} known in this set`}
+flip.addEventListener("click",()=>flip.classList.toggle("on"));
+const step=d=>{if(!deck.length)return;di=(di+d+deck.length)%deck.length;showCard()};
+document.getElementById("fc-next").onclick=()=>step(1);
+document.getElementById("fc-prev").onclick=()=>step(-1);
+document.getElementById("fc-know").onclick=()=>{if(!deck.length)return;known.add(key(deck[di]));store.set("hrm-known",[...known]);step(1)};
+document.getElementById("fc-again").onclick=()=>{if(!deck.length)return;known.delete(key(deck[di]));store.set("hrm-known",[...known]);step(1)};
+document.getElementById("fc-shuf").onclick=()=>buildDeck(true);
+const weakBtn=document.getElementById("fc-weak");
+weakBtn.onclick=()=>{weakOnly=!weakOnly;weakBtn.classList.toggle("pri",weakOnly);buildDeck()};
+fcMod.onchange=()=>buildDeck();
+document.addEventListener("keydown",e=>{if(mode!=="flash"||e.target.tagName==="INPUT"||e.target.tagName==="SELECT")return;
+  if(e.code==="Space"){e.preventDefault();flip.classList.toggle("on")} if(e.key==="ArrowRight")step(1); if(e.key==="ArrowLeft")step(-1)});
+
+/* ===================== QUIZ ===================== */
+let Q=[],qi=0,score=0;
+function startQuiz(){const pool=F.filter(f=>qzMod.value==="all"||f.m===qzMod.value);
+  const n=Math.min(+document.getElementById("qz-n").value,pool.length);
+  const sh=[...pool].sort(()=>Math.random()-.5).slice(0,n);
+  Q=sh.map(f=>{let same=F.filter(x=>x.m===f.m&&x.term!==f.term);if(same.length<3)same=F.filter(x=>x.term!==f.term);
+    const wrong=[...new Set(same.sort(()=>Math.random()-.5).map(x=>x.term))].slice(0,3);
+    return {f,opts:[f.term,...wrong].sort(()=>Math.random()-.5)}});
+  qi=0;score=0;drawQ()}
+function drawQ(){const box=document.getElementById("qz-box");
+  if(!Q.length){box.innerHTML=`<div class="qcard">Pick a module and press <b>Start new quiz</b>.</div>`;return}
+  if(qi>=Q.length){const pct=Math.round(score/Q.length*100);
+    box.innerHTML=`<div class="qcard qres"><div class="big">${score} / ${Q.length}</div><p>${pct>=80?"Strong. Try another module.":pct>=50?"Good base. Review the topics you missed in Flashcards.":"Revise the infographics for this module, then try again."}</p><button class="btn pri" id="qz-again">Try another set</button></div>`;
+    document.getElementById("qz-again").onclick=startQuiz;return}
+  const q=Q[qi];
+  box.innerHTML=`<div class="qcard"><div class="qn">Question ${qi+1} of ${Q.length} · ${modName(q.f.m)}</div><div class="qq">Which term matches: <b>${q.f.def}</b>?</div>
+  <div class="opts">${q.opts.map(o=>`<button class="opt" data-o="${o.replace(/"/g,"&quot;")}">${o}</button>`).join("")}</div>
+  <div class="qfoot"><span class="sc">Score ${score}</span><span id="qz-fb"></span><button class="btn pri" id="qz-next" hidden>Next</button></div></div>`;
+  box.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const ok=b.dataset.o===q.f.term;if(ok)score++;
+    box.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.dataset.o===q.f.term)x.classList.add("ok")});if(!ok)b.classList.add("no");
+    document.getElementById("qz-fb").textContent=ok?"Correct":"Answer: "+q.f.term+" ("+q.f.topic+")";
+    box.querySelector(".sc").textContent="Score "+score;const nx=document.getElementById("qz-next");nx.hidden=false;nx.focus();nx.onclick=()=>{qi++;drawQ()}})}
+document.getElementById("qz-start").onclick=startQuiz;
+
+/* ===================== MODES ===================== */
+function setMode(m){mode=m;["info","flash","quiz"].forEach(k=>{document.getElementById("v-"+k).hidden=k!==m;document.getElementById("m-"+k).setAttribute("aria-pressed",k===m)});
+  if(m==="flash"){fcMod.value=curMod;buildDeck()} if(m==="quiz"){qzMod.value=curMod;if(!Q.length)startQuiz()}}
+document.getElementById("m-info").onclick=()=>setMode("info");
+document.getElementById("m-flash").onclick=()=>setMode("flash");
+document.getElementById("m-quiz").onclick=()=>setMode("quiz");
+
+drawRail();drawInfo();
+</script>
+
+</body></html>
