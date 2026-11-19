@@ -1,0 +1,863 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CMA Pattern Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky header with search, tabs (Map / Ladder / Calculators / Index); Map = grouped tiles that open a detail sheet */
+:root{--bg:#F5F7FA;--panel:#FFFFFF;--ink:#14213A;--mute:#5B6780;--line:#D5DCE7;
+--gA:#1F3A5F;--gB:#0F7C85;--gC:#A8620A;--gD:#2C7A43;--gE:#6B3F94;--tA:#E5ECF6;--tB:#DDF1F2;--tC:#FBEDD6;--tD:#E0F2E5;--tE:#EDE3F6;--sw:#B3261E;--swt:#FBE6E4;--hl:#FFE27A;
+--disp:'Space Grotesk','Segoe UI',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1524;--panel:#16203A;--ink:#E7ECF6;--mute:#9AA7C0;--line:#2A375A;
+--gA:#7FA6DB;--gB:#4CC4CD;--gC:#E8A24A;--gD:#6CCB86;--gE:#B993E0;--tA:#1B2B48;--tB:#12363B;--tC:#3A2A14;--tD:#173823;--tE:#2C2142;--sw:#FF8A80;--swt:#3B1B1B;--hl:#6B5A10;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1524;--panel:#16203A;--ink:#E7ECF6;--mute:#9AA7C0;--line:#2A375A;
+--gA:#7FA6DB;--gB:#4CC4CD;--gC:#E8A24A;--gD:#6CCB86;--gE:#B993E0;--tA:#1B2B48;--tB:#12363B;--tC:#3A2A14;--tD:#173823;--tE:#2C2142;--sw:#FF8A80;--swt:#3B1B1B;--hl:#6B5A10;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+.wrap{max-width:1180px;margin:0 auto}
+header{padding:18px 0 10px}
+h1{font:700 26px/1.1 var(--disp);margin:0;text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:6px 0 0;max-width:70ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tab{font:600 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:6px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--gB);outline-offset:2px}
+.search{display:flex;gap:8px;align-items:center}
+.search input{flex:1;min-width:0;font:400 14px var(--body);padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font:500 12px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--mute);border-radius:99px;padding:3px 10px;cursor:pointer}
+.chip:hover{color:var(--ink);border-color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.gh{font:700 12px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+.gh i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);min-width:0;position:relative}
+.tile:hover{border-color:var(--ink)}
+.tile:focus-visible{outline:2px solid var(--gB);outline-offset:2px}
+.tile .top{display:flex;align-items:center;gap:8px}
+.badge{font:700 12px var(--mono);padding:2px 7px;border-radius:4px;color:#fff}
+.tile .nm{font:700 14px var(--disp);line-height:1.15}
+.tile .hook{font:400 12px/1.45 var(--mono);color:var(--ink);background:var(--bgt,var(--tA));padding:6px 8px;border-radius:5px;overflow-wrap:anywhere}
+.tile .tr{font-size:12px;color:var(--mute)}
+.tile.hit{outline:2px solid var(--hl);outline-offset:1px}
+.tile.dim{opacity:.28}
+.empty{color:var(--mute);padding:20px 0}
+/* sheet */
+dialog{border:0;padding:0;background:transparent;max-width:min(760px,calc(100vw - 24px));width:100%;color:var(--ink)}
+dialog::backdrop{background:rgba(8,14,28,.55)}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;max-height:calc(100vh - 40px);display:flex;flex-direction:column}
+.sh-h{padding:12px 16px;color:#fff;display:flex;align-items:center;gap:10px}
+.sh-h h2{font:700 18px var(--disp);margin:0;flex:1}
+.sh-h button{all:unset;cursor:pointer;font:600 13px var(--body);padding:4px 10px;border:1px solid rgba(255,255,255,.6);border-radius:5px}
+.sh-b{padding:6px 16px 16px;overflow:auto}
+.sec{margin-top:12px}
+.lab{font:700 11px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.sec.sw .lab{color:var(--sw)}
+.sec.sw .txt{background:var(--swt);border-left:3px solid var(--sw);padding:8px 10px;border-radius:0 6px 6px 0}
+.sec ol{margin:0;padding-left:20px}.sec li{margin:3px 0}
+.txt b{font-weight:600}
+code,.m{font-family:var(--mono);font-size:12.5px}
+.seen{color:var(--mute)}
+.nav{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{font:600 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+/* ladder + calcs */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:14px}
+.card h3{font:700 16px var(--disp);margin:0 0 4px}
+.card p.d{margin:0 0 10px;color:var(--mute)}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.fld label{display:block;font:600 11px var(--body);color:var(--mute);margin-bottom:2px}
+.fld input{width:100%;font:400 14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);min-width:0}
+.out{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.o{border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:var(--bg)}
+.o span{display:block;font:600 11px var(--body);color:var(--mute)}
+.o b{font:600 16px var(--mono)}
+.o.key{border-color:var(--gB);background:var(--tB)}
+.flow{display:grid;gap:10px;margin-top:12px}
+.row{display:grid;grid-template-columns:70px repeat(5,minmax(0,1fr));gap:6px;align-items:stretch}
+.row .lv{font:700 13px var(--disp);display:flex;align-items:center}
+.bx{border:1px solid var(--line);border-radius:6px;padding:6px 7px;background:var(--bg);font-size:11px;color:var(--mute);min-width:0}
+.bx b{display:block;font:600 14px var(--mono);color:var(--ink)}
+.bx.res{background:var(--tA);border-color:var(--gA)}
+.bx .op{font:700 11px var(--mono);color:var(--gB)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;font-size:13px}
+th{background:var(--tA);font:700 12px var(--disp)}
+td .pl{all:unset;cursor:pointer;font:700 12px var(--mono);padding:2px 7px;border-radius:4px;color:#fff;display:inline-block;margin-right:3px}
+.pl:focus-visible{outline:2px solid var(--gB)}
+.note{font-size:12px;color:var(--mute);margin-top:8px}
+.plain .txt{font-size:15px;line-height:1.55}
+.kw{display:inline-block;background:var(--tA);border-radius:99px;padding:1px 9px;margin:0 4px 4px 0;font-size:12.5px}
+.ex{background:var(--tB);border-radius:6px;padding:8px 10px}
+.rt{min-width:480px}.rt td{font-size:12.5px}
+details.sec summary{cursor:pointer}.hookf{background:var(--tA);padding:6px 8px;border-radius:5px;margin:4px 0 8px}
+.qn{font:700 20px/1.25 var(--disp);margin:6px 0 12px;text-wrap:balance}
+.opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:14px;line-height:1.4}
+.opt:hover{border-color:var(--ink)}.opt:focus-visible{outline:2px solid var(--gB);outline-offset:2px}
+.crumb{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.res{border:2px solid;border-radius:10px;padding:14px;background:var(--bg)}.res .nm{font:700 18px var(--disp)}.res p{margin:8px 0}
+@media (max-width:640px){.row{grid-template-columns:repeat(2,minmax(0,1fr))}.row .lv{grid-column:1/-1}h1{font-size:22px}}
+@media (prefers-reduced-motion:no-preference){.tile{transition:border-color .15s,opacity .15s}}
+
+.qbox{white-space:pre-wrap;font-size:12.5px;line-height:1.5;background:var(--surface-2,rgba(127,127,127,.08));border:1px solid var(--line,rgba(127,127,127,.25));border-radius:8px;padding:10px 12px;margin:6px 0;overflow-wrap:anywhere}
+.pb{border:1px solid var(--line,rgba(127,127,127,.3));border-radius:10px;margin:8px 0;padding:0 12px}
+.pb>summary{list-style:none;cursor:pointer;padding:10px 0;font-weight:600;font-size:13.5px}
+.pb>summary::before{content:'▸ ';float:left;margin-right:6px}.pb[open]>summary::before{content:'▾ '}.pb .src{display:block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.65}
+.pb ol.sol{margin:6px 0 8px;padding-left:20px}.pb ol.sol li{margin:6px 0;font-size:13.5px;line-height:1.5}
+.pb .fin{margin:8px 0 12px;padding:8px 10px;border-left:3px solid var(--acc,#2a7);background:rgba(40,160,110,.1);border-radius:0 6px 6px 0;font-size:13px;font-weight:600}
+.pb .qh{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.7;margin-top:8px}
+.pt{min-width:0!important}.pt td,.pt th{padding:3px 7px;font-size:12px}
+</style>
+<div class="wrap">
+<header>
+<h1>CMA Pattern Map</h1>
+<p class="sub">Start with “Which pattern?”: answer a few simple questions and it tells you the pattern, explains it in plain words, gives the steps, and lists the exact problem set or slide where the professor used it. Professor's methods only.</p>
+</header>
+<div class="bar">
+<div class="tabs" role="tablist" id="tabs">
+<button class="tab" role="tab" data-t="guide" aria-selected="true">Which pattern?</button>
+<button class="tab" role="tab" data-t="map" aria-selected="false">Pattern map</button>
+<button class="tab" role="tab" data-t="ladder" aria-selected="false">Cost ladder</button>
+<button class="tab" role="tab" data-t="calc" aria-selected="false">Calculators</button>
+<button class="tab" role="tab" data-t="index" aria-selected="false">Every numerical</button>
+</div>
+<div id="finder">
+<div class="search"><input id="q" type="search" placeholder="Type words from the question: break-even, closing stock, reciprocal, 25% on cost…" aria-label="Find a pattern"><button class="btn" id="clr">Clear</button></div>
+<div class="chips" id="chips"></div>
+</div>
+</div>
+<main id="main"></main>
+</div>
+<dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
+<script>
+const G={A:{n:'Cost accounting',c:'--gA',t:'--tA'},B:{n:'Overhead',c:'--gB',t:'--tB'},C:{n:'CVP and decisions',c:'--gC',t:'--tC'},D:{n:'Budgets',c:'--gD',t:'--tD'},E:{n:'Case',c:'--gE',t:'--tE'}};
+const P=[
+{id:'P1',g:'A',n:'Cost sheet (forward)',hook:'Prime = DM used + DL · TMC = PC + MOH · COGM = TMC ± WIP · COGS = COGM ± FG',
+spot:'cost sheet, prime cost, works cost, cost of production, profit, statement of cost',
+do:['DM AFU = opening + purchases + freight − returns; DM used = AFU − closing','+ DL (+ direct expenses) = <b>Prime cost</b>','+ factory OH = <b>TMC</b> (works cost gross)','± WIP = <b>COGM</b> (works cost net)','Layout B only: + admin = cost of production','± FG = <b>COGS</b>','+ selling &amp; distribution (+ admin in layout A) = <b>cost of sales</b>','Sales − cost of sales = <b>profit</b>','Adjust first: + accrued, − prepaid; returns reduce purchases; drop financial items (interest, bad debt, dividend income); asset purchase → only depreciation; shared cost by ratio (8:1:1; rates 2/3 factory, 1/3 office)'],
+sw:'<b>Layout A</b>: admin is a period cost (COGS + admin + selling). <b>Layout B</b>: admin added to production. Total cost and profit are the same; closing-stock value differs.',
+seen:'Set 1 P1: DM used 291,200; PC 509,200; MOH 170,550; TMC 679,750; COGM 687,750; COP (B) 706,625; COGS 652,750; NMC 111,275; loss (10,025). P3: profit 24,300 either layout. P4: 5,580 or 5,370. Day 3 class Day 1 / Day 2.'},
+{id:'P2',g:'A',n:'Back-solve the missing box',hook:'CC = DL ÷ (1−x) · COGS = sales × (1−GM%) · closing = available − used',
+spot:'closing stock missing, fire, find DL, find MOH, GM%, indirect costs are x% of conversion cost',
+do:['Draw the ladder (Cost ladder tab) and fill what is known','Solve the unknown from its own row: closing = available − used','DL = TMC − DM used − MOH','MOH is x% of CC → <b>CC = DL ÷ (1−x)</b>; MOH = CC − DL','GM% → <b>COGS = sales × (1−GM%)</b>; closing FG = FG AFS − COGS; COGM = FG AFS − opening FG; closing WIP = WIP AFU − COGM','Fixed MOH = total MOH − variable MOH'],
+sw:'',seen:'Set 2 Q1: CC 18 ÷ 0.6 = 30, MOH 12; closing DM 6.2, WIP 2.8, FG 5.0 (Rs lakh). Q4 (Rs mn): closing DM 750; DL 7,450; fixed MOH 2,300; closing WIP 1,500; AFS 18,250.'},
+{id:'P3',g:'A',n:'Per-unit cost and inventory',hook:'Unit cost = mfg cost ÷ units produced · price = revenue ÷ units sold',
+spot:'units produced not equal units sold, closing FG at cost, variable marketing, not inventoriable',
+do:['Unit mfg cost = total mfg cost ÷ units <b>produced</b>','FG units = produced − sold (or FG value ÷ unit cost)','COGS = total mfg cost − FG value','Price = revenue ÷ units <b>sold</b>','Variable mfg cost follows <b>produced</b>; variable marketing follows <b>sold</b>; fixed mfg cost goes into stock','OI = revenue − COGS − marketing − fixed non-mfg'],
+sw:'<b>"Not inventoriable"</b>: take that cost out of unit cost (2.33 → 2.01), expense it separately. Profit falls by FG units × amount per unit.',
+seen:'Set 2 Q2: DM 1,400; 9,000 FG units; price 4.80; OI 11,920. Q3: unit cost 2.01; OI 9,040 (= 11,920 − 9,000 × 0.32). Set 1 P4. PlayCraft (d).'},
+{id:'P4',g:'A',n:'Price or quote',hook:'x% on cost → cost × (1+x) · y% on price → cost ÷ (1−y)',
+spot:'quote a price, profit 25% on cost, profit on selling price, overhead as % of wages',
+do:['Works OH % = works OH ÷ wages (or DL)','E&amp;G (admin) % = E&amp;G ÷ works cost','Apply both % to the new job','Price = cost × (1+x) for x% on cost'],
+sw:'<b>y% on selling price</b> → price = cost ÷ (1−y). 25% on cost = 20% on price.',seen:'Set 1 P2: works cost 380,000; OH 25% of wages; E&amp;G 5%; new job cost 16,275; price 20,343.75. P3: factory OH % of DL, admin % of works cost, selling % of sales.'},
+{id:'P5',g:'A',n:'Classify and relevant cost',hook:'Does the TOTAL change with activity? yes = variable, no = fixed',
+spot:'fixed, variable, mixed, direct, indirect, product cost, period cost, relevant, sunk, opportunity, value-added',
+do:['<b>Variable</b>: total = v × units, per unit constant. <b>Fixed</b>: total constant, per unit = F ÷ units. <b>Mixed</b>: Y = F + vX','<b>Relevant</b> = future AND differs between alternatives','Differential = A − B; marginal = one more unit; sunk = ignore; opportunity = best forgone benefit','Product cost = DM+DL+MOH (inventory); period = selling + admin','Value-added: would the customer pay for it?'],
+sw:'Fixed cost <b>per unit</b> must never be multiplied by a new volume. Fixed is fixed <b>in total</b>.',seen:'Day 2 CP1–5; QFT4 (gasoline variable, insurance fixed); Elaine fixed cost 850,000 (a); pizza, rent, HBO per-unit fixed; Day 1 VA / NVA.'},
+{id:'P6',g:'A',n:'T-account flow',hook:'COGM = % finished × WIP total · COGS = % sold × FG',
+spot:'RM WIP FG accounts, percent finished, percent sold, PlayCraft, Solomon Grundy',
+do:['Raw material: open + purchases − closing = used (indirect material goes to MOH)','WIP: + DL + MOH = total; <b>COGM = % finished × WIP total</b>; rest stays in WIP','FG: <b>COGS = % sold × FG</b>; rest stays in FG','Free material = nil; machine or furniture bought = asset','Factory power, supervisor, repairs = MOH; freight outward, advertising, office salary = period'],
+sw:'',seen:'Solomon Grundy: COGM 5,520 (80%); WIP 1,380; COGS 3,864 (70%); FG 1,656. PlayCraft: DM 270,000; MOH 211,000; COGM 621,000; COGS 611,000; GP 589,000; OP 481,000.'},
+{id:'P7',g:'A',n:'Statement format',hook:'GM format: sales − COGS · CM format: sales − all variable',
+spot:'gross margin statement, contribution margin statement, income statement format',
+do:['<b>GM format</b>: sales − COGS = gross margin; − selling − admin = OI','<b>Contribution format</b>: sales − all variable (mfg + selling + admin) = CM; − all fixed = OI','Building depreciation etc. split by area (Madi)'],
+sw:'Same OI only if there is no inventory change.',seen:'Day 3: sales 1,000 → OI 182 in both formats. Madi: 100,000 split 80/10/10.'},
+{id:'P8',g:'B',n:'Primary distribution',hook:'Ratio: part ÷ total × cost · Rate: cost ÷ total base × dept base',
+spot:'share rent, power, light, insurance, supervision among departments, apportion overhead',
+do:['<b>Ratio</b>: write base across depts, cancel common factors, share = part ÷ total × cost (1500:1100:900:500 = 15:11:9:5)','<b>Rate</b>: rate = cost ÷ total base; share = rate × dept base','Check: sum of depts = total cost','A dept without that base gets nil and is left out of its ratio','Bases: rent, building depreciation → area · plant repairs, depreciation → plant value · power → horse power · light → light points · supervision, canteen → employees or wages · fire insurance on stock → stock value · stores → requisitions · time-keeping → employees · repairs → hours'],
+sw:'Same answer by ratio or rate; do one, check with the other.',seen:'Set 3 P1: total 52,000; rent 10,000 area 15:11:9:5 → A 3,750; totals A 22,150, B 15,075, C 10,000, D 4,775.'},
+{id:'P9',g:'B',n:'Service to production',hook:'Reciprocal: E = (E₀ + a·F₀) ÷ (1 − a·b)',
+spot:'stores maintenance time-keeping serve each other, direct method, step method, reciprocal, repeated distribution, dual rate',
+do:['<b>Direct</b>: ignore service↔service; ratio among production depts only','<b>Step</b>: start with the dept serving most others; new total = own + received; base excludes itself and closed depts; sequence changes the answer','<b>Reciprocal</b>: E = E₀ + a·F; F = F₀ + b·E → <b>E = (E₀ + a·F₀) ÷ (1 − a·b)</b>, then F; then P = P₀ + %E·E + %F·F','<b>Repeated distribution</b>: push balances back and forth until ≈ 0 (same totals)'],
+sw:'Percentages from a ratio use the <b>whole</b> ratio (incl. the other service dept): E → A4:B5:C7:F4 = 20/25/35/20; direct uses 4:5:7 only. <b>Single rate</b> = total cost ÷ total base. <b>Dual rate</b> = variable pool × actual use + fixed pool × budgeted use.',
+seen:'Set 3 P2 direct: 17,100 / 14,500 / 13,200. P3 step: X 15,421, Y 10,579. P4 reciprocal: E 2,693.88, F 3,538.78; A 9,423.47, B 8,058.16, C 9,358.37 (26,840). Day 4 mini example.'},
+{id:'P10',g:'B',n:'Common cost and bundle',hook:'Share = SA ÷ ΣSA × common cost',
+spot:'common cost, users share facility, stand-alone, incremental, bundle price split, revenue allocation',
+do:['<b>Stand-alone</b>: share = SA<sub>i</sub> ÷ ΣSA × common cost','<b>Incremental</b>: rank users; first user pays own SA; next pays (total − first SA)','<b>Bundle</b>: product share = bundle price × weight ÷ Σ weights (weights = stand-alone selling prices; or unit cost; or units)'],
+sw:'Incremental depends on the ranking; compromise = equal split of the rest.',seen:'Walk-through 14.7 / 14.8: SA 75 and 85, joint 115 → 47% / 53% → 54.05 / 60.95; incremental 75 / 40 (or 57.50 each).'},
+{id:'P11',g:'C',n:'Cost estimation',hook:'m = ΔY ÷ ΔX · b = Y − mX',
+spot:'high-low, regression, mixed cost, estimate fixed and variable, data points, account analysis',
+do:['<b>High-low</b>: pick highest and lowest <b>activity</b>; m = ΔY ÷ ΔX; b = Y − mX','<b>Regression</b>: slope = variable cost per unit, intercept = fixed; Excel =SLOPE(Y,X), =INTERCEPT(Y,X), =FORECAST(), or Data Analysis → Regression','<b>Account analysis</b>: read fixed and variable from the bill'],
+sw:'High-low uses 2 points only; regression uses all. When usage changes, scale only the <b>variable</b> part.',seen:'Deck: (3, 9) and (12, 15) → m 0.67, b 6.96. Regression 14.98 / 8,773.72. Water: 770 × 12 + 1,709 × 12. Cheese Co.: Y = 7.50X + 14,000.'},
+{id:'P12',g:'C',n:'Absorption vs variable',hook:'Profit(abs) − Profit(var) = (produced − sold) × FMOH per unit',
+spot:'two profit figures, absorption costing, variable costing, inventory change, marginal cost',
+do:['<b>Absorption</b> unit cost = DM + DL + VMOH + <b>FMOH ÷ units produced</b>','<b>Variable</b> unit cost excludes FMOH (expensed)','<b>Profit(abs) − Profit(var) = (produced − sold) × FMOH/unit</b>','Marginal cost = prime cost + variable OH'],
+sw:'Equal profit if produced = sold. If DL is fixed (Indian practice) leave it out of marginal cost.',seen:'4,000 made, 3,800 sold, FMOH 50,000 → 12.50 × 200 = 2,500 (5,500 vs 3,000); inventory 4,500 vs 2,000. Marginal cost 8.00.'},
+{id:'P13',g:'C',n:'CVP basics',hook:'BE units = FC ÷ CM · BE sales = FC ÷ CM ratio · OL = CM ÷ OI',
+spot:'break-even, target profit, tax, margin of safety, operating leverage, contribution margin ratio',
+do:['CM/unit = P − v; <b>CM ratio</b> = CM ÷ P','Break-even: <b>units = FC ÷ CM/unit</b>; <b>sales = FC ÷ CM ratio</b>','Target: units = (FC + TP) ÷ CM/unit; sales = (FC + TP) ÷ CM ratio','<b>Net target → OI = NI ÷ (1 − t)</b> first','MOS = budget − BE; ratio = MOS ÷ budget','<b>OL = CM ÷ OI; %ΔOI = OL × %Δsales</b>'],
+sw:'<b>Units</b> answer uses CM per unit; <b>rupee</b> answer uses CM ratio. OL changes with the sales level.',seen:'Tee Times: CM 200; BE 250; TP 90,000 → 700 sets; NI 63,000 at 30% → 420,000. Coffee Klatch: CM 1.13; ratio 0.758; BE 1,150; 3,363 cups; 5,013; MOS 950; OL 2.21; +20% → +44.2%.'},
+{id:'P14',g:'C',n:'Multi-product and mix',hook:'WACM = Σ mix × CM · BE units = FC ÷ WACM',
+spot:'several products, sales mix, weighted average contribution margin, change of mix',
+do:['<b>Mix in units</b>: WACM = Σ mix × CM/unit; BE units = FC ÷ WACM; each product = BE × mix','<b>Mix in sales ₹</b>: contribution = sales × CM ratio of each; profit = ΣCM − FC; compare old and new mix'],
+sw:'Keep the mix: units must be in the ratio. Slide shows 3,247 (rounded WACM); exact 3,263.',seen:'Savor the Flavor: WACM 1.5325; BE 3,263 (816 / 489 / 1,958). Eg 5: profit 12,600 → 8,280.'},
+{id:'P15',g:'C',n:'What-if (RBC)',hook:'ΔProfit = ΔQ × CM − ΔFC',
+spot:'what if, price change, variable cost change, advertising, commission, volume change, wholesaler',
+do:['Base: P 500, v 300, FC 80,000, Q 500 → profit 20,000','New profit = new Q × new CM − new FC; compare with base','Volume and fixed only: <b>ΔProfit = ΔQ × CM − ΔFC</b>'],
+sw:'Price or v change → CM changes for <b>all</b> units. Commission replaces salary → v up, FC down.',seen:'540 units + 10,000 ad → −2,000. v 310, Q 580 → +10,200. P 480, FC +15,000, Q 650 → +2,000. Commission (+15 / −6,000, Q 575) → +12,375. Wholesaler 150 units at 320 = 300 + 3,000 ÷ 150.'},
+{id:'P16',g:'C',n:'Special order and minimum price',hook:'Spare: variable + order fixed + profit · Full: add opportunity cost',
+spot:'minimum price, accept the order, spare capacity, scarce resource, opportunity cost, special tools',
+do:['<b>Spare capacity</b>: price ≥ variable cost + order-specific fixed (tools, ads) + wanted profit; ignore existing fixed','<b>Scarce resource</b>: contribution per hour = CM ÷ hours; opportunity cost = hours × that; accept only if price &gt; DM + labour + VOH + opportunity cost','<b>Extra capacity</b>: flex each cost (split mixed), contribution needed = fixed + target profit − existing contribution'],
+sw:'Capacity full → add opportunity cost. Capacity spare → variable cost only.',seen:'Eg 1: 2 + 1 + 4 + 2.5 = Rs 9.50. Eg 2: 8.385 + 2.9125 = 11.2975. Eg 3: 6,000 vs 5,500 → reject. Eg 4: combination profit 1.75 lakh (vs 1.20, 1.475); capacity 60% → 100% = 25.00 lakh.'},
+{id:'P17',g:'D',n:'Master budget to cash',hook:'Production = sales + end FG − begin FG · borrow = minimum − balance',
+spot:'sales forecast, purchases, direct labour hours, collections, payments, cash budget, borrowing, receivables',
+do:['Order: sales → <b>production</b> → DM / DL / OH / S&amp;A → collections and payments → <b>cash budget</b> → COGM / COGS → statements','Production = sales + ending FG − beginning FG (ending = % of <b>next</b> month)','RM purchases = production × kg + ending RM − beginning RM; × price','<b>Hours paid = MAX(required, guaranteed)</b>','OH cash = total − depreciation','Collections = Σ % × sales of each month back; uncollectible never collected','Cash: beginning + receipts − disbursements; <b>borrow = minimum − balance</b>; interest = P × r × months ÷ 12','Payables: % this month + % next month; discount × (1 − d)'],
+sw:'Receivables and payables at year-end = unpaid % of recent months. Disbursements exclude depreciation; dividends, equipment, loan repayments are cash.',seen:'Practice: 1 Bison 2,040; 2 Swansong 32,950; 3 Coleman 49,200; 4 Tidewater 264,000; 5 Northcutt $183,750; 6 Quattro $75,000; 7 Verna $46,000; 8 Phineus $674,000; 9 Wolverine +$4,500. Gingham $94,160 / $114,000 / $94,860 / $113,300. Tiara 42,200 / 47,150 / 43,350 / 132,700.'},
+{id:'P18',g:'D',n:'Flexible budget',hook:'Flexed = v × actual activity + fixed · variance = actual − flexed',
+spot:'actual vs budget, flexed budget, static budget, variance favourable unfavourable, activity level',
+do:['<b>Flexed = v × actual activity + fixed</b> (fixed never flexes)','<b>Variance = actual − flexed</b>: cost higher = <b>U</b>, lower = <b>F</b>','Formula from two points: v = ΔY ÷ ΔX; F = Y − vX'],
+sw:'Static budget variance mixes volume and spending; use flexed for control. Cash budget for a <b>range</b> of activity is flexible.',seen:'Interspace $8,700 U (static); Gridiron $6,400 U (27,500 × 6 = 165,000); Trois Elles $3,000 F; Zin E; Young Y = 4.5AH + 720,000 (B); 877,500 at 35,000 hrs (A).'},
+{id:'P19',g:'E',n:'Single rate, drop, spiral',hook:'Rate = (Σ variable OH + fixed 45,000) ÷ Σ DLH · mark-on = (price − cost) ÷ cost',
+spot:'Camelback, burden rate, direct labour hours, mark-on, drop a product, death spiral, two pools, contribution',
+do:['DLH/unit = DL ÷ 5','<b>Rate = (Σ variable OH + fixed 45,000) ÷ Σ DLH</b>','Std cost = DM + DL + DLH × rate','<b>Mark-on = (price − cost) ÷ cost</b>; drop if &lt; 25%','Capacity released makes the sister product → <b>recompute DLH and rate</b> → repeat','<b>Contribution</b>: CM/unit = price − variable cost; pick best per equipment group; fixed is sunk','<b>Two pools</b>: pool OH ÷ pool DLH'],
+sw:'Mark-on is on <b>cost</b>, not price.',seen:'Rates 6.67 → 10.36 → 12.50 → 30.00. Q1: C dropped (28.50 / 78.50 / 50.00). Q2: rate 12.50, D dropped, B alone fails. Q3: 70,000 → 53,000 → 50,000 → −3,000. Q4: 90,000. Q5: 50,000. Q6: 53,000.'}
+];
+const EXT={
+P1:{plain:'A cost sheet follows the money through the factory from left to right: materials come in, labour and factory costs are added, some work is still unfinished (WIP), some finished goods are still unsold (FG), and what is left was sold.',
+easy:['<b>Materials used</b>: opening + bought + freight − returned, then minus what is left at the end.','<b>Add labour</b> (paid + accrued) and direct expenses. That is the <b>prime cost</b>.','<b>Add factory overhead</b>. For a shared cost, take only the factory share. That is the <b>total manufacturing cost (TMC)</b>.','<b>Unfinished work</b>: add opening WIP, subtract closing WIP. That is the <b>cost of goods made (COGM)</b>.','<b>Unsold stock</b>: add opening FG, subtract closing FG. That is the <b>cost of goods sold (COGS)</b>.','<b>Add admin and selling costs</b>. Sales minus this total is the <b>profit</b>.'],
+vs:'All stock figures given → P1. One figure missing → P2. Costs per unit, with units sold different from units made → P3. Asked for a selling price → P4.',
+ex:'Day 1 class numbers: DM 0 + 400 + 50 − 25 = 425; − closing 225 = <b>200 used</b>. + DL 100 + MOH 50 = <b>TMC 350</b>. WIP: 350 − closing 75 = <b>COGM 275</b>. FG: 275 − closing 50 = <b>COGS 225</b>.',
+refs:[['Set 1 P1 (Problem_set_1.pdf, EXCEL-1 sheet P1s1)','ABC Ltd cost sheet','PC 509,200; TMC 679,750; COGM 687,750; COGS 652,750; loss (10,025)'],['Set 1 P3 (EXCEL-1 P3s1)','Cost sheet with % rates','profit 24,300'],['Set 1 P4 (EXCEL-1 P4s1)','Per-unit cost sheet','5,580 or 5,370'],['Day 3 slides 14–19','Class funnel, Day 1','TMC 350, COGM 275, COGS 225'],['Day 3 slides 23–29','Class funnel, Day 2','TMC 600, COGM 400, COGS 375'],['PlayCraft question and solution files','Toy maker T-accounts','TMC 631,000; COGM 621,000; COGS 611,000']]},
+P2:{plain:'Some numbers are hidden, but every stock box follows the same rule, so you can work backwards from what you know. It is a puzzle: find a row with only one unknown, solve it, and that answer unlocks the next row.',
+easy:['Draw the <b>ladder</b> (DM row, WIP row, FG row) and write every known number in it.','Find a row with <b>one</b> missing number and solve it: closing = opening + added − used.','If a <b>percentage</b> is given, turn it into a sum first: "MOH is 40% of conversion cost" means DL is 60% of it, so CC = DL ÷ 0.6.','GM% gives COGS: <b>sales × (1 − GM%)</b>. Then closing FG = FG available − COGS.','Move to the next row with the new number. Repeat until every box is filled.'],
+vs:'Everything given → P1. Per-unit and units given → P3. Here something that normally is an input (a stock, DL, MOH) is the answer.',
+ex:'Set 2 Q1: DL 18 is 60% of CC → CC 30, MOH 12. PC 29.4 − DL 18 = DM used 11.4; DM AFU 17.6 − 11.4 = <b>closing DM 6.2</b>. TMC 41.4; WIP AFU 44.8. COGS = 50 × 0.8 = 40; closing FG 45 − 40 = <b>5.0</b>; COGM 45 − 3 = 42; closing WIP 44.8 − 42 = <b>2.8</b>.',
+refs:[['Set 2 Q1 (Problem_set_2, EXCEL-1 sheet for set 2)','Fire at the plant, stocks on 28 Feb','DM 6.2; WIP 2.8; FG 5.0 (Rs lakh)'],['Set 2 Q4','ABC, September 2014 (Rs million)','closing DM 750; DL 7,450; fixed MOH 2,300; WIP 1,500; AFS 18,250']]},
+P3:{plain:'Production costs sit in stock until the goods are sold. So only the cost of the units sold hits this year\'s profit; unsold units carry their cost into closing stock. Fixed factory cost is spread over the units produced.',
+easy:['Add up <b>all manufacturing cost</b>: DM, DL, variable and fixed factory overhead.','Divide by <b>units produced</b> to get the cost per unit.','Unsold units = produced − sold. Closing FG = unsold units × cost per unit.','<b>COGS</b> = total manufacturing cost − closing FG value.','Selling price = revenue ÷ units <b>sold</b>.','Marketing, selling and admin are period costs: they never go into stock.'],
+vs:'P3 uses absorption costing (fixed factory cost goes into stock). If the question also asks for variable costing or the difference between the two profits, go to P12. If a cost is declared "not inventoriable", remove it from the unit cost first.',
+ex:'Set 2 Q2: manufacturing cost 233,000 ÷ 100,000 units = <b>2.33</b>. FG 20,970 ÷ 2.33 = <b>9,000</b> units. Sold 91,000; price 436,800 ÷ 91,000 = <b>4.80</b>. COGS 212,030; OI <b>11,920</b>.',
+refs:[['Set 2 Q2','ABC metal shelving','DM stock 1,400; FG 9,000 units; price 4.80; OI 11,920'],['Set 2 Q3','Indirect cost not inventoriable','unit cost 2.01; OI 9,040'],['Set 1 P4','Per-unit cost sheet','cost 0.63 a unit; profit 5,580'],['PlayCraft part (d)','Fixed and variable with production','fixed per toy falls as output rises']]},
+P4:{plain:'Last year\'s accounts tell you how big overhead usually is compared with something simple, like wages or works cost. Use those percentages to cost a new job, then add the profit.',
+easy:['Find the percentages: <b>works OH ÷ wages</b> (or DL) and <b>E&amp;G ÷ works cost</b>.','List the new job\'s materials and wages: that is its prime cost.','Add works OH using the first percentage. That is the works cost.','Add E&amp;G using the second percentage on works cost. That is the total cost.','Add profit: "x% on cost" → cost × (1 + x). "y% on selling price" → cost ÷ (1 − y).'],
+vs:'P4 prices a new job from old percentages. P1 reports a finished period. 25% on cost equals 20% on selling price, so both ways give the same price.',
+ex:'Set 1 P2: works OH 40,000 ÷ wages 160,000 = 25%; E&amp;G 19,000 ÷ works cost 380,000 = 5%. New job 8,000 + 6,000 = 14,000; OH 1,500; works cost 15,500; E&amp;G 775; <b>cost 16,275</b>; price <b>20,343.75</b>.',
+refs:[['Set 1 P2 (EXCEL-1 sheet P2s1)','Steelsways Engineering estimate','cost 16,275; price 20,343.75'],['Set 1 P3','Factory OH % of DL; admin % of works cost; selling % of sales','profit 24,300']]},
+P5:{plain:'Before any calculation, decide what kind of cost you are looking at. The behaviour (does it move with activity?) and the purpose (is it relevant to this decision?) tell you how to treat it.',
+easy:['<b>Variable?</b> If output doubles, does the <b>total</b> double? Yes → variable. Per unit it stays the same.','<b>Fixed?</b> Total stays the same. Per unit falls as units rise. Never multiply a per-unit fixed cost by a new volume.','<b>Mixed?</b> Part fixed, part variable: Y = F + vX.','<b>Relevant?</b> Only if it is in the future AND differs between the options.','Already spent → <b>sunk</b>, ignore. Benefit you give up → <b>opportunity cost</b>, include.','<b>Value-added?</b> Would the customer pay for this activity? If not, it is non-value-added.'],
+vs:'P5 is about words and definitions. As soon as numbers are used to find fixed and variable parts, go to P11.',
+ex:'QFT 4: the doctor said gasoline is fixed and insurance is variable. Wrong: gasoline total rises with miles (<b>variable</b>); insurance total stays the same (<b>fixed</b>), only cost per mile falls.',
+refs:[['Day 2 slide 13','QFT 4: doctor and her car','gasoline variable, insurance fixed'],['Day 2 slides 14–21','Per-unit fixed cost (pizza, rent, HBO)','fixed per unit falls as units rise'],['Day 2 slide 25–26','CP-3 cones; CP-4 Elaine Co.','C and D; fixed 850,000 (a)'],['Day 2 slide 27','CP-5 Rosland Graphics','(b)'],['Day 2 slide 33','CP-1, 2, 3 relevance','A yes; B no; sale value = opportunity cost'],['Day 1 slides 29–35','Value-added, ethics cases, CP','see notes']]},
+P6:{plain:'Follow the goods day by day through three storerooms: raw material (RM), work in process (WIP) and finished goods (FG). Each move takes cost out of one room and puts it in the next.',
+easy:['Draw three T-accounts: RM, WIP, FG (and COGS).','Buying material adds to <b>RM</b>. Sending material to production moves it to <b>WIP</b>.','Add DL and MOH to <b>WIP</b>.','"Finished x%" means x% of the WIP total moves to FG. That moved amount is <b>COGM</b>; the rest stays in WIP.','"Sold y%" means y% of FG moves to <b>COGS</b>; the rest stays in FG.','Machines and furniture bought are assets, not costs. Free material costs nil.'],
+vs:'Same idea as P1, but given as day-by-day events or percentages instead of opening and closing balances.',
+ex:'Solomon Grundy: RM 10,000; DM 3,600 to WIP (RM 6,400); + DL 2,500 + MOH 800 = WIP 6,900. 80% finished: <b>COGM 5,520</b>, WIP <b>1,380</b>. 70% sold: <b>COGS 3,864</b>, FG <b>1,656</b>.',
+refs:[['Day 3 slides 31–32','Now You Do It: Solomon Grundy','RM 6,400; WIP 1,380; FG 5,520; COGS 3,864'],['PlayCraft (question_-_Copy.docx and solution xlsx)','Toy maker','DM 270,000; MOH 211,000; COGM 621,000; COGS 611,000; GP 589,000; OP 481,000']]},
+P7:{plain:'The same profit can be shown in two layouts. The gross-margin layout groups costs by <b>function</b> (making vs selling and admin). The contribution layout groups them by <b>behaviour</b> (variable vs fixed).',
+easy:['<b>Gross-margin layout</b>: Sales − COGS = gross margin. Then subtract selling and admin to get operating income.','<b>Contribution layout</b>: Sales − all variable costs (production, selling and admin) = contribution margin. Then subtract all fixed costs.','If inventory did not change, both layouts show the same operating income.','A building used for making, selling and admin: split its depreciation by floor area, factory share into MOH.'],
+vs:'Asked for "gross margin" → first layout. Asked for "contribution margin" or CVP → second layout.',
+ex:'Day 3 statement example: sales 1,000 → operating income <b>182</b> in both layouts. Madi: depreciation 100,000 split 80 / 10 / 10 by area.',
+refs:[['Day 3 slide 20','Gross margin and contribution margin statements','OI 182'],['Day 2 slide 50','Gross margin statement','—'],['Day 4 slide 2','QFT 5: Madi Corporation building','split by area']]},
+P8:{plain:'Overhead belongs to the whole factory, but each department should carry its fair share. "Fair" means by the thing that causes the cost: rent by floor area, power by horse power, and so on.',
+easy:['For each cost, <b>pick the base</b> from the table (area, plant value, horse power…).','Write the base for each department in a row.','<b>Ratio method</b>: cancel to smallest numbers (1500:1100:900:500 = 15:11:9:5); share = part ÷ total × cost.','<b>Rate method</b>: rate = cost ÷ total base; share = rate × the department\'s base. Same answer.','A department with none of that base (no stock, no horse power) gets nil.','Total each column. The grand total must equal the original total cost.'],
+vs:'P8 spreads factory-wide costs to all departments. P9 comes next: it pushes service-department costs into production departments.',
+ex:'Set 3 P1: rent 10,000 by area 15:11:9:5 → A <b>3,750</b>, B 2,750, C 2,250, D 1,250. Column totals: A <b>22,150</b>, B 15,075, C 10,000, D 4,775 = 52,000.',
+refs:[['Day 4 slide 12 ("See excel 1 - p1s3")','Set 3 P1 primary distribution','A 22,150; B 15,075; C 10,000; D 4,775'],['Day 4 slides 7–13','Production OH steps and bases','—']]},
+P9:{plain:'Stores, maintenance and time-keeping do not make products, so their cost must be passed on to the production departments. The three methods differ only in how they treat service departments using each other.',
+easy:['<b>Direct</b>: pretend service departments do not use each other. Split each service cost among the production departments only.','<b>Step</b>: close the service departments one by one, starting with the one that serves the most others. A closed department never receives cost again. New total = own cost + cost received.','<b>Reciprocal</b>: two service departments use each other, so each one\'s true cost depends on the other. Write two equations and solve: <b>E = (E₀ + a·F₀) ÷ (1 − a·b)</b>.','<b>Repeated distribution</b> gets the same answer: keep passing balances back and forth until nothing is left.','Check: total after distribution = total before.'],
+vs:'Question says "ignore service-to-service" or gives no percentages between service departments → <b>direct</b>. Question gives a sequence → <b>step</b>. Question gives % that each service department gives to the other → <b>reciprocal</b>. Simple test: do two service departments both serve each other?',
+ex:'Set 3 P4: E = 2,340 + 0.10F; F = 3,000 + 0.20E → E = 2,640 ÷ 0.98 = <b>2,693.88</b>; F = <b>3,538.78</b>. A = 8,000 + 0.20E + 0.25F = <b>9,423.47</b>.',
+refs:[['Day 4 slide 33 ("See excel 1 - p2s3")','Set 3 P2, direct method','17,100 / 14,500 / 13,200'],['Day 4 slide 42 (p3s3)','Set 3 P3, step method','X 15,421; Y 10,579'],['Day 4 slide 49 (p4s3)','Set 3 P4, reciprocal','A 9,423.47; B 8,058.16; C 9,358.37'],['Day 4 slides 22–25','Single vs dual rate','—'],['Day 4 mini example (notes)','Direct / step / reciprocal compared','1,600 total each']]},
+P10:{plain:'Several users share one facility, or several products share one selling price. You need a fair way to split the shared amount.',
+easy:['<b>Stand-alone method</b>: each user\'s stand-alone cost ÷ total of stand-alone costs, times the shared cost.','<b>Incremental method</b>: rank the users. The first pays only its own stand-alone cost. The next pays the extra the group costs.','<b>Bundle price</b>: choose a weight (stand-alone selling price is the usual one). Share = bundle price × weight ÷ sum of weights.'],
+vs:'Stand-alone is simple and fair-looking; incremental depends on who is ranked first. If the weights are not given, use selling price, then unit cost, then units.',
+ex:'Phone plan: you alone 85, brother alone 75, joint 115. Stand-alone shares 47% / 53% → <b>54.05 / 60.95</b>. Incremental: brother 75, you 40.',
+refs:[['Day 4 slides 52–56','Allocating common costs; Walk Through 14.7','54.05 / 60.95; 75 / 40; 57.50 each'],['Day 5 slides 3–10','Common cost, stand-alone, incremental; walk-throughs 14.7 and 14.8','—'],['Day 5 slides 11–12','Bundled products and revenue allocation','by selling price, unit cost or units']]},
+P11:{plain:'A cost that is part fixed, part variable is hard to budget. These methods read the fixed part and the cost per unit from past data.',
+easy:['<b>High-low</b>: pick the point with the highest <b>activity</b> and the point with the lowest activity (not the highest cost).','Variable cost per unit <b>m = change in cost ÷ change in activity</b>.','Fixed cost <b>b = cost − m × activity</b> (use either point).','<b>Regression</b>: the same line, but using all points. Excel: =SLOPE(costs, activity) and =INTERCEPT(costs, activity).','Predict with Y = mX + b. If usage changes, scale only the variable part.'],
+vs:'High-low needs only two points and is quick but can mislead. Regression uses every point. A bill that already shows fixed and variable parts needs no estimation (account analysis).',
+ex:'Day 5 deck: low (3, 9), high (12, 15). m = 6 ÷ 9 = <b>0.67</b>; b = 15 − 0.67 × 12 = <b>6.96</b>. Y = 0.67X + 6.96.',
+refs:[['Day 5 slide 18','High-low method','m 0.67; b 6.96'],['Day 5 slides 19–21','Regression; Excel output','14.98 and 8,773.72'],['Day 5 (account analysis)','Water bill: 770 × 12 + 1,709 × 12','fixed + variable'],['Day 6 slides 69–100','Cheese Company cost formula','Y = 7.50X + 14,000']]},
+P12:{plain:'The two methods treat fixed factory cost differently. Absorption puts it in product cost (so some sits in closing stock). Variable costing expenses it all in the year. So profits differ whenever stock changes.',
+easy:['Absorption unit cost = variable cost + <b>fixed MOH ÷ units produced</b>.','Variable-costing unit cost = variable cost only.','Stock built up (produced > sold): absorption profit is <b>higher</b>.','<b>Difference = (produced − sold) × fixed MOH per unit.</b>','If produced = sold, both profits are the same.','Marginal cost = prime cost + variable overhead.'],
+vs:'P3 finds the numbers under absorption. P12 compares absorption with variable costing. In Indian questions DL is often fixed, so leave it out of marginal cost.',
+ex:'4,000 made, 3,800 sold, fixed MOH 50,000 → 12.50 a unit. Difference = 200 × 12.50 = <b>2,500</b> (5,500 vs 3,000). Closing stock 200 × 22.50 = 4,500 vs 200 × 10 = 2,000.',
+refs:[['Day 5 slides 28–38','Absorption and variable costing; example','2,500 difference']]},
+P13:{plain:'Contribution margin (CM) is what each unit adds toward fixed cost. Break-even is when total CM equals fixed cost. Everything else is a rearrangement of that one idea.',
+easy:['<b>CM per unit</b> = price − variable cost. <b>CM ratio</b> = CM ÷ price.','Break-even <b>units</b> = fixed cost ÷ CM per unit.','Break-even <b>sales ₹</b> = fixed cost ÷ CM ratio.','Target profit: add it to fixed cost first: (FC + target) ÷ CM.','Target is <b>after tax</b>? Operating income = net income ÷ (1 − tax rate), then continue.','<b>Margin of safety</b> = budget − break-even. <b>Operating leverage</b> = CM ÷ OI; % change in profit = OL × % change in sales.'],
+vs:'Units wanted → divide by CM per unit. Rupees wanted → divide by CM ratio. More than one product → P14. Something changes → P15.',
+ex:'Tee Times: CM 600 − 400 = 200. BE = 50,000 ÷ 200 = <b>250</b>. Target NI 63,000 at 30% tax → OI 90,000 → (50,000 + 90,000) ÷ 200 = <b>700 sets</b> → sales <b>420,000</b>.',
+refs:[['Day 5 slide 94','Tee Times','250; 700; 420,000'],['Day 5 slides 62–72','Coffee Klatch practice (CP 1–4)','CM 1.13; BE 1,150; 3,363 cups; 5,013'],['Day 5 slides 109–117','Margin of safety','950 cups'],['Day 5 slides 118–129','Operating leverage and cost structure','OL 2.21; +20% sales → +44.2%']]},
+P14:{plain:'When a company sells several products, one break-even needs one average contribution. Weight each product\'s CM by how much of the mix it is.',
+easy:['<b>Mix in units</b>: WACM = Σ (mix share × CM per unit).','Break-even units = fixed cost ÷ WACM. Split these units by the mix.','<b>Mix in sales rupees</b>: contribution of each = its sales × its CM ratio. Add them, subtract fixed cost.','Mix change: recompute with the new shares and compare profit.','The mix must hold: you cannot sell any 3,263 units, they must be in the ratio.'],
+vs:'Units-based mix → WACM (per unit). Sales-based mix → CM ratios. One product only → P13.',
+ex:'Savor the Flavor: 0.25 × 2.50 + 0.15 × 1.25 + 0.60 × 1.20 = WACM <b>1.5325</b>. BE = 5,000 ÷ 1.5325 = <b>3,263</b> units (816 / 489 / 1,958). The slide shows 3,247 from rounding.',
+refs:[['Day 5 slide 53','Savor the Flavor ice-cream cart','WACM 1.5325; 3,263 units'],['Day 6 slide 4','Eg 5: effect of a change in sales mix','profit 12,600 → 8,280']]},
+P15:{plain:'"What happens to profit if…?" Start from the base profit and recompute with the change. Only the numbers that change need new work.',
+easy:['Write the base: price 500, variable 300, fixed 80,000, 500 units → profit 20,000.','Put in the change (price, variable cost, fixed cost, volume).','New profit = new units × new CM − new fixed cost.','Compare with 20,000: that is the gain or loss.','Shortcut when only volume and fixed cost change: <b>ΔProfit = ΔQ × CM − ΔFC</b>.'],
+vs:'A price or variable-cost change affects the CM of <b>every</b> unit. A volume change affects only the extra units. A one-off order at a fixed price → P16.',
+ex:'RBC: 540 units and 10,000 more advertising → 40 × 200 − 10,000 = <b>−2,000</b> (do not do it). v 310, Q 580: 580 × 190 − 80,000 = 30,200, <b>+10,200</b>.',
+refs:[['Day 5 slides 61–66','RBC base case and sensitivity set-up','profit 20,000'],['Day 5 slides 96–113','RBC what-if cases','−2,000; +10,200; +2,000; +12,375'],['Day 5 slide 105','Wholesaler order (150 units)','price 320 = 300 + 3,000 ÷ 150']]},
+P16:{plain:'Should we accept an order or what is the lowest price? Only costs that change because of the order matter. Costs already there (fixed) are ignored unless the order uses up something valuable.',
+easy:['Ask: <b>is capacity spare?</b>','Spare → minimum price = variable cost per unit + any new fixed cost of this order (tools, ads) + profit you want.','Full or scarce (e.g. labour hours) → add <b>opportunity cost</b>: the contribution you would lose from other work using the same hours.','Contribution per hour = CM per unit ÷ hours per unit. Opportunity cost = hours × that.','Accept only if the offer price is above total relevant cost.','Using spare capacity for a project (Eg 4): scale variable costs with sales, add new fixed costs, compare projects or the combination.'],
+vs:'P15 changes the regular business. P16 is a one-off or extra-capacity decision. Spare capacity → no opportunity cost. Full capacity → opportunity cost.',
+ex:'Eg 3: labour is scarce. Cost of order = DM + labour + variable OH 4,000 + opportunity cost 2,000 = <b>6,000</b> against price 5,500 → <b>reject</b>.',
+refs:[['Day 5 slides 84–85','Eg 1 (recession, idle capacity) and Eg 2 (extra capacity)','Rs 9.50; Rs 11.2975'],['Day 5 slides 86–90','Special order; Eg 3 scarce labour','6,000 vs 5,500, reject'],['Day 6 slides 3 and 6','Eg 4: overseas contract vs local advertising','combination 1.75 lakh']]},
+P17:{plain:'A master budget plans the whole year in a fixed order, because each budget feeds the next: sales decide production, production decides materials and labour, and all of them decide cash.',
+easy:['<b>Production</b> = sales + wanted ending stock − beginning stock.','<b>Materials to buy</b> = production × kg per unit + wanted ending RM − beginning RM. Multiply by price.','<b>Labour</b>: hours needed; if workers are guaranteed hours, pay for the <b>larger</b> of needed and guaranteed.','<b>Overhead cash</b> = total overhead − depreciation (depreciation is not cash).','<b>Collections</b>: for each earlier month, % collected × that month\'s sales. Uncollectible is never collected.','<b>Cash budget</b>: beginning + receipts − payments. If below the minimum, borrow the shortfall; interest = amount × rate × months ÷ 12.'],
+vs:'P17 builds the plan forward from sales. P18 compares actual with the plan after the event.',
+ex:'Quattro June collections: 30% × 70,000 + 60% × 80,000 + 10% × 60,000 = 21,000 + 48,000 + 6,000 = <b>75,000</b>.',
+refs:[['Day 6 slides 30–53','Breakers master budget worked example','sales, production, DM, DL, OH, cash, statements'],['Day 6 slides 58–59','Practice problems 1–9','2,040; 32,950; 49,200; 264,000; $183,750; $75,000; $46,000; $674,000; +$4,500'],['Day 6 (problem 10)','Gingham Company','$94,160 / $114,000 / $94,860 / $113,300'],['Day 6 (problem 11)','Tiara Company','42,200 / 47,150 / 43,350 / 132,700']]},
+P18:{plain:'A static budget is set for one activity level. If actual activity is different, comparing against it is unfair. A flexed budget re-runs the plan at the actual activity.',
+easy:['Split the budget into variable cost per unit and fixed cost.','<b>Flexed budget = variable rate × actual activity + fixed cost.</b> Fixed cost never flexes.','<b>Variance = actual − flexed budget.</b>','For a cost: actual above budget is <b>U</b> (unfavourable); below is <b>F</b>.','From two budget points, v = ΔY ÷ ΔX and F = Y − vX, then predict at any activity.'],
+vs:'Static vs actual (same budget) → includes the effect of volume. Flexed vs actual → shows spending control only. Use flexed for judging managers.',
+ex:'Young: v = 135,000 ÷ 30,000 = 4.50; fixed = 720,000. At 35,000 hours: 4.5 × 35,000 + 720,000 = <b>877,500</b>.',
+refs:[['Day 6 slides 69–100','Cheese Company static and flexible budgets','Y = 7.50X + 14,000'],['Day 6 slide 101','Interspace (static) and Gridiron (flexed)','$8,700 U; $6,400 U'],['Day 6 slides 103–105','Trois Elles; Zin; Young','$3,000 F; E; Y = 4.5AH + 720,000 (B); 877,500 (A)']]},
+P19:{plain:'The Camelback case shows what goes wrong when one overhead rate per labour hour is used for products that use overhead very differently: you drop the wrong product, the rate rises, and more products look unprofitable (the death spiral).',
+easy:['Convert each product to <b>direct labour hours</b> (DL ÷ 5).','<b>Rate = (total variable OH + fixed 45,000) ÷ total DLH.</b>','Standard cost = DM + DL + DLH × rate. Mark-on = (market price − cost) ÷ cost.','Drop a product if mark-on is under 25%. Its capacity makes the sister product, so <b>recalculate the rate</b> and test again.','Contribution view: use price − variable cost; fixed cost is sunk, so pick the higher CM product in each equipment group.','Two pools: one rate for each product line\'s overhead.'],
+vs:'The single rate and the contribution view give different answers. The case is about why the single rate misleads.',
+ex:'Rate 6.67 → C dropped → rate 10.36 → rate 12.50 → D dropped → rate 30.00. Profit: 70,000 → 53,000 → 50,000 → −3,000. Contribution view: <b>90,000</b>.',
+refs:[['Camelback case, Q1','Single rate, prices and drop','C dropped; 28.50 / 78.50 / 50.00'],['Q2','Rate 12.50; D dropped; B alone fails','—'],['Q3','Profit path','70,000 → 53,000 → 50,000 → −3,000'],['Q4','Contribution analysis','90,000'],['Q5','Variable traced, fixed on DLH','50,000'],['Q6','Two pools','53,000']]}
+};
+P.forEach(p=>Object.assign(p,EXT[p.id]));
+
+const IDX=[['Set 1 P1 (ABC cost sheet)','P1','loss (10,025)'],['Set 1 P2 (quote)','P4','price 20,343.75'],['Set 1 P3','P1,P4','profit 24,300'],['Set 1 P4','P1,P3','5,580 / 5,370'],
+['Set 2 Q1 (fire)','P2','CC 30; MOH 12; stocks 6.2 / 2.8 / 5.0'],['Set 2 Q2','P3','OI 11,920; price 4.80'],['Set 2 Q3','P3','OI 9,040'],['Set 2 Q4','P2','AFS 18,250'],
+['Set 3 P1 (primary)','P8','A 22,150; B 15,075; C 10,000; D 4,775'],['Set 3 P2 (direct)','P9','17,100 / 14,500 / 13,200'],['Set 3 P3 (step)','P9','X 15,421; Y 10,579'],['Set 3 P4 (reciprocal)','P9','9,423.47 / 8,058.16 / 9,358.37'],
+['PlayCraft','P6,P1','COGM 621,000; OP 481,000'],['Solomon Grundy','P6','5,520 / 3,864'],['Madi','P7,P8','split by area'],['Day 3 class funnel (Day 1 and 2)','P1','TMC 350 / 600; COGS 225 / 375'],['Day 3 GM vs CM','P7','OI 182'],
+['Day 1–2 CP, QFT, Elaine','P5','850,000 (a)'],['Common cost 14.7 / 14.8','P10','54.05 / 60.95'],['Bundle split','P10','by selling price'],['High-low / regression','P11','0.67, 6.96; 14.98, 8,773.72'],
+['Absorption vs variable','P12','2,500'],['Tee Times','P13','250; 700; 420,000'],['Coffee Klatch','P13','OL 2.21; +44.2%'],['Savor the Flavor','P14','3,263 units'],['RBC cases','P15','−2,000; +10,200; +2,000; +12,375'],
+['Eg 1 / 2 / 3','P16','9.50 / 11.2975 / reject'],['Eg 4','P16','1.75 lakh'],['Eg 5','P14','12,600 → 8,280'],['Practice 1–9, Gingham, Tiara','P17','see pattern'],['Interspace, Gridiron, Trois Elles, Zin, Young','P18','see pattern'],['Camelback Q1–Q6','P19','see pattern']];
+const WH={'Set 1 P1 (ABC cost sheet)':'Problem_set_1.pdf; EXCEL-1 P1s1','Set 1 P2 (quote)':'Problem_set_1.pdf; EXCEL-1 P2s1','Set 1 P3':'Problem_set_1.pdf; EXCEL-1 P3s1','Set 1 P4':'Problem_set_1.pdf; EXCEL-1 P4s1','Set 2 Q1 (fire)':'Problem set 2, Q1','Set 2 Q2':'Problem set 2, Q2','Set 2 Q3':'Problem set 2, Q3','Set 2 Q4':'Problem set 2, Q4','Set 3 P1 (primary)':'Problem set 3; Day 4 slide 12','Set 3 P2 (direct)':'Problem set 3; Day 4 slide 33','Set 3 P3 (step)':'Problem set 3; Day 4 slide 42','Set 3 P4 (reciprocal)':'Problem set 3; Day 4 slide 49','PlayCraft':'question files (docx, xlsx)','Solomon Grundy':'Day 3 slides 31–32','Madi':'Day 4 slide 2 (QFT 5)','Day 3 class funnel (Day 1 and 2)':'Day 3 slides 14–19, 23–29','Day 3 GM vs CM':'Day 3 slide 20','Day 1–2 CP, QFT, Elaine':'Day 2 slides 13, 25–27, 33','Common cost 14.7 / 14.8':'Day 4 slides 52–56; Day 5 slides 3–10','Bundle split':'Day 5 slides 11–12','High-low / regression':'Day 5 slides 18–21','Absorption vs variable':'Day 5 slides 28–38','Tee Times':'Day 5 slide 94','Coffee Klatch':'Day 5 slides 62–72, 117, 128–129','Savor the Flavor':'Day 5 slide 53','RBC cases':'Day 5 slides 61–66, 96–113','Eg 1 / 2 / 3':'Day 5 slides 84–90','Eg 4':'Day 6 slides 3, 6','Eg 5':'Day 6 slide 4','Practice 1–9, Gingham, Tiara':'Day 6 slides 58–59','Interspace, Gridiron, Trois Elles, Zin, Young':'Day 6 slides 101–105','Camelback Q1–Q6':'Camelback case PDF'};
+const CHIPS=['cost sheet','closing stock missing','units sold not produced','profit on cost','fixed or variable','departments share','service departments','reciprocal','high-low','break-even','several products','special order','cash budget','variance','Camelback'];
+const $=s=>document.querySelector(s);
+const col=g=>`var(${G[g].c})`;
+let tab='guide',query='',grp='';
+const SYN={'closing stock':'back-solve missing','fire':'missing','units sold':'per-unit produced sold'};
+function score(p){if(!query)return 0;const hay=(p.id+' '+p.n+' '+p.spot+' '+p.hook+' '+p.seen+' '+p.do.join(' ')).toLowerCase().replace(/<[^>]+>/g,'');const ws=query.toLowerCase().split(/\s+/).filter(Boolean);let s=0;for(const w of ws){if(hay.includes(w))s+=1;if(p.spot.toLowerCase().includes(w))s+=2;}return s}
+function renderChips(){$('#chips').innerHTML=CHIPS.map(c=>`<button class="chip${query===c?' on':''}" data-c="${c}">${c}</button>`).join('')+Object.keys(G).map(k=>`<button class="chip${grp===k?' on':''}" data-g="${k}" style="border-style:dashed">${G[k].n}</button>`).join('')}
+function renderMap(){
+ const sc=P.map(p=>score(p));const best=Math.max(0,...sc);
+ let h='';const groups=grp?[grp]:Object.keys(G);
+ for(const g of groups){
+  h+=`<div class="gh" style="color:${col(g)}"><i style="background:${col(g)}"></i>${G[g].n}</div><div class="grid">`;
+  for(const p of P.filter(p=>p.g===g)){const s=sc[P.indexOf(p)];const cls=query?(s>0&&s>=Math.max(1,best-1)?' hit':(s===0?' dim':'')):'';
+   h+=`<button class="tile${cls}" data-p="${p.id}" style="--bgt:var(${G[g].t})"><span class="top"><span class="badge" style="background:${col(g)}">${p.id}</span><span class="nm">${p.n}</span></span><span class="hook">${p.hook}</span><span class="tr">${p.spot.split(', ').slice(0,3).join(' · ')}</span></button>`}
+  h+='</div>'}
+ $('#main').innerHTML=h;if(query){const t=document.querySelector('.tile.hit');if(t){t.style.scrollMarginTop='170px';t.scrollIntoView({block:'start'})}}}
+const tb=(rows,cls)=>{const h=rows[0],b=rows.slice(1);return `<div class="scroll"><table class="rt pt"><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${b.map(r=>`<tr>${r.map((x,i)=>`<td${i?' class="m"':''}>${x}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`};
+const PROB={};
+PROB.P1=[
+{s:'Problem Set 1 · Problem 1',q:`Problem 1 : Cost sheet and profit or loss
+The following information are obtained from the books of accounts of ABC Ltd for the year ended 2013.
+
+Inventories:  Raw materials 140000 | Work in progress 200000 | Finished Goods 80000
+Office appliances 17500 | Plant and Machinery 460500 | Buildings 200000
+Sales 768000 (credit) | Sales returns and rebates 14000
+Materials purchased 320000 | Freight on materials 16000 | Purchase returns 4800
+Direct labour 160000 | Direct expense 50000 | Indirect labour 18000
+Factory supervision 10000 | Factory repairs and upkeep 14000
+Heat light and power 65000 | Rates and taxes 6300 | Misc. Expenses factory 18700
+Sales commission 33600 | Sales travelling 11000 | Sales promotion 22500
+Distribution dept. salaries & expenses 18000 | Office salaries and expenses 8600
+Interest on borrowed fund 2000 | Dividend income 20000 (credit) | Bad debts 5000
+
+Additional Information:
+1. Closing inventories: Raw materials Rs. 180000; WIP Rs. 192000 and FG Rs. 115000
+2. Accrued Expenses: Direct Labour Rs. 8000; Indirect Labour Rs. 1200 and Interest on borrowed funds Rs. 2000
+3. Depreciation to be provided on: Office appliances at 5%; Plant and machinery at 10%; and buildings at 4%
+4. Distribution of common expenses would be as follows:
+   a. Heat, light and power: in the ratio of 8:1:1 to factory, office and selling and distribution
+   b. Rates and taxes: 2/3 to factory and 1/3 to office
+   c. Depreciation on buildings: in the ratio of 8:1:1 to factory, office and selling and distribution
+
+Prepare a cost sheet of ABC Ltd for the year ended 31.03.2013 showing a. Prime costs  b. Factory Overheads  c. Cost of production  d. Cost of sales. Also, show Profit and Loss as per cost accounts for the above period.`,
+st:[`<b>Leave out first:</b> interest on borrowed funds (2,000 + 2,000 accrued), bad debts 5,000 and dividend income 20,000. They are financial items, not cost.`,
+`<b>DM ladder.</b> Purchases 320,000 + freight 16,000 − returns 4,800 = 331,200. + opening 140,000 = <b>DM AFU 471,200</b>. − closing 180,000 = <b>DM used 291,200</b>.`,
+`<b>DL</b> = 160,000 + 8,000 accrued = <b>168,000</b>. Direct expense = 50,000.`,
+`<b>Prime cost</b> = 291,200 + 168,000 + 50,000 = <b>509,200</b>.`,
+`<b>Factory overhead</b> (split each common cost first):`+tb([['Item','Working','Rs'],['Indirect labour','18,000 + 1,200','19,200'],['Supervision','','10,000'],['Repairs and upkeep','','14,000'],['Heat, light, power','8/10 × 65,000','52,000'],['Rates and taxes','2/3 × 6,300','4,200'],['Misc. factory','','18,700'],['Depreciation plant','10% × 460,500','46,050'],['Depreciation building','4% × 200,000 × 8/10','6,400'],['<b>Factory OH</b>','','<b>170,550</b>']]),
+`<b>Works cost gross = COP gross = TMC</b> = 509,200 + 170,550 = <b>679,750</b>.`,
+`<b>WIP ladder.</b> + opening 200,000 = WIP AFU 879,750; − closing 192,000 = <b>COGM (works cost net) 687,750</b>.`,
+`<b>FG ladder.</b> + opening 80,000 = FG AFS 767,750; − closing 115,000 = <b>COGS 652,750</b>.`,
+`<b>Non-manufacturing cost.</b> Admin: 6,500 + 2,100 + 8,600 + 800 + 875 (5% × 17,500) = <b>18,875</b>. Selling and distribution: 6,500 + 33,600 + 11,000 + 22,500 + 18,000 + 800 = <b>92,400</b>. Total = <b>111,275</b>.`,
+`<b>Profit.</b> Net sales = 768,000 − 14,000 = 754,000. Gross margin = 754,000 − 652,750 = 101,250. Less 111,275 = <b>loss 10,025</b>.`,
+`<i>Solution-file layout:</i> works cost net 687,750 + admin 18,875 = cost of production 706,625; +80,000 − 115,000 = 671,625; + selling and distribution 92,400 = <b>cost of sales 764,025</b>; 754,000 − 764,025 = loss 10,025. Same loss.`],
+a:'Prime cost 509,200 · Factory OH 170,550 · Cost of production 706,625 (works cost net 687,750) · Cost of sales 764,025 · Loss 10,025'},
+
+{s:'Problem Set 1 · Problem 3',q:`Problem 3: Cost sheet with adjustments for inventories
+A manufacturing company submits the following information on 31.03.2013.
+
+Sales for the year 275000
+Inventories as on 1.4.2012: Materials 3000 | WIP 4000 | FG 8000
+Raw materials purchased 110000 | Direct labour 65000 | Chargeable expenses 10000
+Inventories as on 31.3.2013: Materials 4000 | WIP 6000 | FG 7000
+Other Expenses: Factory overheads @ 50% of direct labour | Administration overheads @ 10% of works cost | Selling overheads @ 5% of sales
+
+Prepare a cost sheet`,
+st:[`<b>DM used</b> = 110,000 + 3,000 − 4,000 = <b>109,000</b>.`,`<b>Prime cost</b> = 109,000 + DL 65,000 + chargeable expenses 10,000 = <b>184,000</b>.`,`<b>Factory OH</b> = 50% × 65,000 = 32,500. <b>Works cost gross (TMC)</b> = 216,500.`,
+`<b>WIP:</b> + 4,000 − 6,000. <b>Works cost net</b> = <b>214,500</b>.`,`<b>Admin OH</b> = 10% × works cost 214,500 = 21,450. <b>COGM (cost of production)</b> = 235,950.`,`<b>FG:</b> + 8,000 − 7,000. <b>COGS</b> = <b>236,950</b>.`,`<b>Selling OH</b> = 5% × 275,000 = 13,750. <b>Cost of sales</b> = 250,700.`,`<b>Profit</b> = 275,000 − 250,700 = <b>24,300</b>.`,`<i>Alternative (admin as period cost):</i> COGM 214,500 → COGS 215,500 + selling 13,750 + admin 21,450 = 250,700. Same profit.`],
+a:'Prime cost 184,000 · Works cost 214,500 · COGM 235,950 · Cost of sales 250,700 · Profit 24,300'},
+
+{s:'Problem Set 1 · Problem 4',q:`Problem 4: Cost of sales and profit determination
+The following data relate to the manufacture of a standard product during a four week period ending June 30, 2013:
+
+Raw materials consumed Rs 4000 | Wages Rs 6000
+Machine hours worked 1000 | Machine hour rate 0.50
+Office overhead @ 20% on works cost | Selling overhead per unit 0.06
+Units produced 20000 | Units sold (at Re 1 per unit) 18000
+
+Prepare a cost sheet showing the cost per unit and profit for the period.`,
+st:[`<b>Prime cost</b> = 4,000 + 6,000 = 10,000 (0.50 a unit).`,`<b>Works OH</b> = 1,000 machine hours × 0.50 = 500. <b>Works cost</b> = 10,500 (0.525 a unit).`,`<b>Office OH</b> = 20% × 10,500 = 2,100. <b>Cost of production</b> = 12,600; per unit = 12,600 / 20,000 = <b>0.63</b>.`,
+`<b>Units sold differ from units made (pattern P3):</b> closing stock = 2,000 units × 0.63 = 1,260. <b>COGS</b> = 12,600 − 1,260 = 11,340.`,`<b>Selling OH</b> = 18,000 × 0.06 = 1,080. <b>Cost of sales</b> = 12,420 (0.69 a unit).`,`<b>Profit</b> = sales 18,000 − 12,420 = <b>5,580</b> (0.31 a unit).`,`<i>If office OH is a period cost:</i> stock 2,000 × 0.525 = 1,050; COGS 9,450; + 1,080 + 2,100 = 12,630; profit 5,370. The 210 gap = 2,000 × 0.105.`],
+a:'Cost per unit 0.63 (production), 0.69 (sales) · Profit 5,580'},
+
+{s:'Day 3 slides · Class example (the factory funnel), Day 1 and Day 2',q:`Day 1.  Direct materials: opening 0; purchase 400; freight 50; return 25; closing 225.  Direct labour 100.  MOH 50.  Work in process: opening 0; completed (COGM) 275.  Finished goods: opening 0; closing 50.
+Find DM AFU, DM used, COP gross (TMC), closing WIP, COGM, FG AFS and COGS.
+
+Day 2 (opening = Day 1 closing).  Purchase 400; freight 100; return 25; closing DM 400.  DL 200.  MOH 100.  COGM 400.  Closing FG 75.`,
+st:[`<b>Day 1 DM:</b> 0 + 400 + 50 − 25 = <b>DM AFU 425</b>; − closing 225 = <b>DM used 200</b>.`,`<b>Funnel:</b> DM used 200 + DL 100 + MOH 50 = <b>COP gross = TMC 350</b>.`,`<b>WIP:</b> opening 0 + 350 = WIP AFU 350; − completed 275 → <b>closing WIP 75</b>. Completed 275 is COGM.`,`<b>FG:</b> 0 + 275 = FG AFS 275; − closing 50 = <b>COGS 225</b>.`,
+`<b>Day 2:</b> DM 225 + 400 + 100 − 25 = AFU 700; − 400 = used 300. TMC = 300 + 200 + 100 = <b>600</b>. WIP AFU = 75 + 600 = 675; − COGM 400 = <b>closing WIP 275</b>. FG AFS = 50 + 400 = 450; − 75 = <b>COGS 375</b>.`,`Each day's closing becomes the next day's opening.`],
+a:'Day 1: TMC 350 · COGM 275 · COGS 225 · closing WIP 75. Day 2: TMC 600 · COGM 400 · COGS 375 · closing WIP 275'}
+];
+PROB.P2=[
+{s:'Problem Set 2 · Q1',q:`A distraught employee, Mr. Unsatisfied, put a torch to a manufacturing plant on a blustery February 26. The resulting blaze destroyed the plant and its contents. Fortunately, certain accounting records were kept in another building. They reveal the following from Jan 1 to Feb 28, current year
+
+DM purchased Rs 16 lacs; WIP, Jan 1 Rs. 3.4 lacs; DM, Jan 1 Rs. 1.6 lacs; FG, Jan 1 Rs. 3.0 lacs; Revenues Rs 50.0 lacs; DL Rs 18.00 lacs; PC Rs 29.40 lacs; Indirect factory costs - 40% of Conversion cost; COG available for sale - Rs 45.00 lacs; Gross margin %age based on revenue - 20%
+
+Calculate the FG stock, WIP stock and DM stock on FEB 28`,
+st:[`<b>Stage 1 (DM).</b> DM AFU = 1.6 + 16 = <b>17.6</b>. PC = DM used + DL, so DM used = 29.4 − 18 = <b>11.4</b>. <b>Closing DM = 17.6 − 11.4 = 6.2</b>.`,
+`<b>Find MOH.</b> CC = DL + MOH and MOH = 40% CC, so DL = 60% CC. 18 = 0.6 CC, so <b>CC = 30</b> and <b>MOH = 12</b>.`,
+`<b>Stage 2 (funnel and WIP).</b> TMC = 29.4 + 12 = <b>41.4</b>. WIP AFU = 3.4 + 41.4 = <b>44.8</b>.`,
+`<b>Stage 3 (FG, back from revenue).</b> GM = 20% × 50 = 10, so COGS = 50 − 10 = <b>40</b>. FG AFS = 45, so <b>closing FG = 45 − 40 = 5</b>.`,
+`<b>Back to WIP.</b> FG AFS = opening FG 3 + COGM, so COGM = 42. <b>Closing WIP = 44.8 − 42 = 2.8</b>.`],
+a:'DM stock Rs 6.2 lacs · WIP stock Rs 2.8 lacs · FG stock Rs 5.0 lacs'},
+{s:'Problem Set 2 · Q4',q:`ABC's selected data for the month of September 2014 related to current year are as follows (in Rs Mio):
+Begin WIP inventory 2000 | Begin DM inventory 900 | DM purchased 3600 | DM used 3750 | Variable manufacturing OH 2500 | Total manufacturing OH 4800 | Total manufacturing costs 16000 | Cost of goods manufactured 16500 | COGS 17000 | End FG inventory 1250
+
+Calculate DM inventory, WIP inventory and FG inventory as on 30 Sept 2014; fixed manufacturing OH, and DL for Sept; Goods available for sale in September`,
+st:[`<b>DM.</b> AFU = 900 + 3,600 = 4,500; closing DM = 4,500 − 3,750 = <b>750</b>.`,`<b>DL.</b> TMC = DM used + DL + MOH, so DL = 16,000 − 3,750 − 4,800 = <b>7,450</b>.`,`<b>Fixed MOH</b> = total 4,800 − variable 2,500 = <b>2,300</b>.`,`<b>WIP.</b> AFU = 2,000 + 16,000 = 18,000; − COGM 16,500 = <b>closing WIP 1,500</b>.`,`<b>FG.</b> Goods available for sale = COGS + closing FG = 17,000 + 1,250 = <b>18,250</b>. Opening FG = 18,250 − 16,500 = 1,750. Closing FG given = <b>1,250</b>.`],
+a:'DM 750 · WIP 1,500 · FG 1,250 · Fixed MOH 2,300 · DL 7,450 · Goods available for sale 18,250 (Rs Mio)'}
+];
+PROB.P3=[
+{s:'Problem Set 2 · Q2',q:`ABC manufactures and sells metal shelving. It began operations on Jan 01. Costs incurred for the current year are as follows:
+DM Rs 1.4 lacs V | DL Rs 0.3 lacs V | PLANT ENERGY COSTS Rs 0.05 lacs V
+IND L Rs 0.1 lacs V and Rs 0.16 lacs F | IND other Rs 0.08 lacs V and Rs 0.24 lacs F
+MKT. DIST and Cust OH Rs 1.2285 lacs V and Rs 0.4 lacs F | Admn OH Rs 0.5 lacs F
+
+Variable manufacturing costs are with respect to units produced; variables MDC are wrt to units sold
+Inventory data: begin Jan 01 and ending Dec 31:  DM 0 kg, 2000 kg | WIP 0 units, 0 units | FG 0 units, ? units
+Production in the current year was 1 lac units; 2 kg of DM is used to make 1 unit of FG. Revenue were Rs 436800. The FG inventory ending is at average unit manufacturing cost for the current year and was Rs 20970. Calculate period ending DM inventory cost; period ending FG inventory in units; SP per unit; operating income`,
+st:[`<b>Step 1 (DM).</b> DM used = 100,000 × 2 = 200,000 kg; bought 202,000 kg. The Rs 1.4 lacs is the cost of DM <b>used</b>, so Rs 0.70 a kg. <b>Closing DM = 2,000 × 0.70 = Rs 1,400</b>.`,
+`<b>Step 2 (unit manufacturing cost).</b> 140,000 + 30,000 + 5,000 + (10,000 + 16,000) + (8,000 + 24,000) = <b>233,000</b>; per unit = 233,000 / 100,000 = <b>2.33</b>.`,
+`<b>Step 3 (FG units).</b> 20,970 / 2.33 = <b>9,000 units</b>. Units sold = 100,000 − 9,000 = <b>91,000</b>.`,
+`<b>Step 4.</b> Selling price = 436,800 / 91,000 = <b>Rs 4.80</b>.`,
+`<b>Step 5 (income statement).</b> COGS = 233,000 − 20,970 = 212,030. GM = 436,800 − 212,030 = 224,770. Variable marketing = 91,000 × 1.35 = 122,850 (it follows units <b>sold</b>). Fixed marketing 40,000; admin 50,000.`,
+`<b>Operating income</b> = 224,770 − 122,850 − 40,000 − 50,000 = <b>11,920</b>.`],
+a:'Closing DM Rs 1,400 · FG 9,000 units · SP Rs 4.80 · Operating income Rs 11,920'},
+{s:'Problem Set 2 · Q3',q:`If in the above problem, Indirect other manufacturing costs are not inventoriable cost and there are 9000 units of FG inventory on Dec 31. Then, calculate FG inventory ending total cost, and operating income of the year`,
+st:[`Indirect other = 8,000 + 24,000 = <b>32,000</b>. It is a period cost, expensed now.`,`<b>Inventoriable manufacturing cost</b> = 233,000 − 32,000 = 201,000; per unit = <b>2.01</b>.`,`<b>FG ending cost</b> = 9,000 × 2.01 = <b>Rs 18,090</b>. <b>COGS</b> = 201,000 − 18,090 = 182,910.`,
+`<b>Operating income</b> = 436,800 − 182,910 = 253,890; less 32,000 (period), marketing 162,850 (122,850 + 40,000), admin 50,000 = <b>9,040</b>.`,`<b>Check:</b> 11,920 − 9,040 = 2,880 = 9,000 × (2.33 − 2.01).`],
+a:'FG ending cost Rs 18,090 · Operating income Rs 9,040'}
+];
+PROB.P4=[
+{s:'Problem Set 1 · Problem 2',q:`Problem 2: Cost statement, estimated cost and Price
+The accounts of Steelsways Engineering Co. Ltd show the following for 2013:
+Materials used Rs. 180000 | Manual and machine labour wages directly chargeable 160000 | Works overhead expenditure 40000 | Establishment and general expenses 19000
+
+a. Show the works cost and total cost, the percentage that the works overhead cost bears to the manual and machine labour wages and the percentage that the establishment and general expenses bear to the works cost
+b. What price should the company quote to manufacture a machine which, it is estimated, will require an expenditure of Rs 8000 on materials; and Rs. 6000 on wages, so that it will yield a profit of 25% on the total cost or 20% on selling price`,
+st:[`<b>(a) Works cost</b> = 180,000 + 160,000 + 40,000 = <b>380,000</b>. <b>Total cost</b> = 380,000 + 19,000 = <b>399,000</b>.`,`<b>Works OH % of wages</b> = 40,000 / 160,000 = <b>25%</b>. <b>E&amp;G % of works cost</b> = 19,000 / 380,000 = <b>5%</b>.`,
+`<b>(b) Machine.</b> Prime cost = 8,000 + 6,000 = 14,000. Works OH = 25% × 6,000 = 1,500. Works cost = 15,500. E&amp;G = 5% × 15,500 = 775. <b>Total cost 16,275</b>.`,`<b>Profit 25% on cost:</b> 16,275 × 1.25 = <b>20,343.75</b>.`,`<b>Check, 20% on selling price:</b> 16,275 / 0.80 = 20,343.75. Same, because 25% on cost = 20% on price.`],
+a:'Works cost 380,000 · Total cost 399,000 · 25% · 5% · Quote Rs 20,343.75'}
+];
+PROB.P5=[
+{s:'Day 3 · Question for Thought 5 (Madi Corporation)',q:`One building is used for manufacturing, selling and administration. How should the depreciation on that building be treated? (Madi Corporation question for thought 5.)`,
+st:[`<b>Do not treat it as one expense.</b> Split it on a fair base (floor area), as the professor does in Set 1 P1: 8 : 1 : 1.`,`<b>Factory share</b> → manufacturing overhead. It is a <b>product cost</b>: it goes into inventory and reaches the P&amp;L as COGS when sold.`,`<b>Office and selling shares</b> → <b>period costs</b>, expensed in the year.`,`Example: building depreciation 4% × 200,000 = 8,000. Factory 6,400; admin 800; selling 800.`],
+a:'Split by area. Factory share = product cost (inventory); admin and selling shares = period costs'},
+{s:'Day 3 · Gross margin vs contribution margin statements (class example)',q:`Sales 1,000.  Variable costs: product (manufacturing) 250 and period (non-manufacturing) 270.  Fixed costs: product 160 and period 138.  Prepare the gross margin statement and the contribution margin statement.`,
+st:[`<b>Gross margin format (by function):</b> COGS = variable product 250 + fixed product 160 = 410. GM = 1,000 − 410 = <b>590</b>.`,`Less non-manufacturing (selling + admin) = 270 + 138 = 408. <b>Operating profit = 182</b>.`,`<b>Contribution format (by behaviour):</b> variable = 250 + 270 = 520. CM = 1,000 − 520 = <b>480</b>. Less fixed 160 + 138 = 298. <b>Operating profit = 182</b>.`,`Same profit, two layouts. Professor's P&amp;L order: Sales − COGS = GM − sales expenses − admin expenses = OP.`],
+a:'Gross margin 590 · Contribution margin 480 · Operating profit 182'}
+];
+PROB.P6=[
+{s:'Day 3 · Now You Do It: Solomon Grundy Corp.',q:`Solomon Grundy Corp. has no opening stocks.
+Tuesday: bought raw material Rs 10,000 for cash.
+Wednesday: Rs 3,600 of direct material moved to production.
+Thursday: direct labour Rs 2,500.
+Friday: manufacturing overhead Rs 800.
+Saturday: finished 80% of production.
+Sunday: sold 70% of what was finished.
+(b) Balances in RM, WIP and FG on Saturday.  (c) COGS on Sunday.`,
+st:[`<b>Tue:</b> RM = 10,000.`,`<b>Wed:</b> RM = 10,000 − 3,600 = 6,400; WIP = 3,600.`,`<b>Thu:</b> WIP = 3,600 + 2,500 = 6,100.`,`<b>Fri:</b> WIP = 6,100 + 800 = 6,900.`,`<b>Sat:</b> 80% finished. COGM = 0.8 × 6,900 = <b>5,520</b> into FG; WIP left = 6,900 − 5,520 = <b>1,380</b>.`,`<b>Sun:</b> COGS = 0.7 × 5,520 = <b>3,864</b>; FG left = 5,520 − 3,864 = <b>1,656</b>.`],
+a:'Saturday: RM 6,400 · WIP 1,380 · FG 5,520. Sunday COGS 3,864'},
+{s:'Practice problem · PlayCraft Inc.',q:`PlayCraft Inc. manufactures wooden educational toys by transforming purchased and recycled wood into finished products. The following transactions occurred during the year (in no particular order):
+1. Purchased a new woodworking machine for Rs.4,00,000, with an estimated life of 5 years, used exclusively for the business.
+2. Purchased new wooden boards for Rs.2,40,000 and collected recycled wood from local furniture shops at no cost.
+3. Purchased paints, glue, screws and other production supplies for Rs. 60,000. All of these supplies were used during the year.
+4. Paid workers Rs.1,50,000 to cut, shape, assemble, and finish the wooden toys.
+5. Purchased office furniture for Rs. 80,000 for use by the company's administrative staff.
+6. Paid Rs. 40,000 for electricity and other utilities relating to the factory.
+7. Paid Rs. 25,000 for repairs and maintenance of the woodworking machinery.
+8. Paid Rs. 45,000 to transport completed toys to customers. The transportation was incurred after the toys were completed and sold.
+9. Paid Rs.35,000 for online advertising and promotional campaigns.
+10. Depreciation on the woodworking machine for the year was Rs.36,000.
+11. Depreciation on the office furniture for the year was Rs.8,000.
+12. Paid factory supervisor salaries of Rs.50,000.
+13. Beginning raw materials inventory Rs. 75,000.  14. Beginning WIP Rs. 20,000.  15. Beginning FG Rs. 60,000.
+16. At year-end, one batch of toys remained partially completed; manufacturing costs accumulated in it Rs. 30,000.
+17. At year-end, raw materials costing Rs. 45,000 remained unused.
+18. All other toys were completed and sold to customers for Rs. 12,00,000.
+19. Rs. 70,000 of completed toys remained in finished goods at year-end.
+20. Paid Rs. 20,000 in salaries to administrative staff.
+(a) Raw materials, WIP and FG T-accounts  (b) direct material consumed, total manufacturing costs, COGM, COGS  (c) traditional income statement  (d) which costs rise with production, and why it helps management`,
+st:[`<b>Tag each item first.</b> Machine (1) and furniture (5) are <b>assets</b>: only their depreciation (10, 11) counts. Boards (2) = DM. Supplies (3) = indirect material. Workers (4) = DL. Utilities (6), repairs (7), supervisor (12), machine depreciation (10) = MOH. Transport (8), advertising (9), office depreciation (11), admin salaries (20) = period costs.`,
+`<b>Raw materials T-account.</b> Opening 75,000 + boards 240,000 + supplies 60,000 = 375,000 available. Closing 45,000. Used = 330,000 = DM <b>270,000</b> + indirect material 60,000.`,
+`<b>MOH</b> = 60,000 + 50,000 + 36,000 + 25,000 + 40,000 = <b>211,000</b>.`,`<b>WIP T-account.</b> 20,000 + DM 270,000 + DL 150,000 + MOH 211,000 = 651,000 AFU. Closing 30,000. <b>COGM = 621,000</b>. Total manufacturing cost = 270,000 + 150,000 + 211,000 = <b>631,000</b>.`,
+`<b>FG T-account.</b> 60,000 + 621,000 = 681,000. Closing 70,000. <b>COGS = 611,000</b>.`,
+`<b>(c) Income statement.</b> Sales 1,200,000 − COGS 611,000 = <b>gross profit 589,000</b>. Less freight 45,000, depreciation (office) 8,000, admin salaries 20,000, advertising 35,000 = 108,000. <b>Operating profit = 481,000</b>.`,
+`<b>(d)</b> Variable (rise with output): DM, DL if piece-rate, supplies, often electricity. Fixed in the short run: machine depreciation 36,000, supervisor 50,000. It helps because management can estimate the extra cost of more output and see cost per unit fall as fixed cost spreads.`],
+a:'DM consumed 270,000 · Total manufacturing cost 631,000 · COGM 621,000 · COGS 611,000 · Gross profit 589,000 · Operating profit 481,000'}
+];
+PROB.P8=[
+{s:'Problem Set 3 · Problem 1 (primary distribution)',q:`Problem 1: for Method of primary distribution
+ABC Ltd is divided into four departments: A, B, C as production departments and D as service departments. The actual costs for a given period are as follows:
+Rent 10000 | Repairs to plant 6000 | Dep. of plant 4500 | Supervision 15000 | Fire insurance 5000 | Power 9000 | Light 1000 | Employers insurance liability 1500
+
+Information with respect to the four departments (Dept A, B, C, D):
+Area (sq ft): 1500, 1100, 900, 500
+No. of employees: 20, 15, 10, 15
+Horse power of machines: 800, 500, 200, ---
+Total wages: 60000, 40000, 30000, 20000
+Value of plant: 240000, 180000, 120000, 60000
+Value of stock: 150000, 90000, 60000, ---
+Light points (nos.): 40, 30, 20, 10
+
+Apportion the costs by most equitable method`,
+st:[`<b>Step 1. Pick the base for each cost:</b> area → rent; value of plant → repairs and depreciation; total wages → supervision; value of stock → fire insurance; horse power → power; light points → light; employees → employers' insurance.`,
+`<b>Step 2. Write the ratio, strike common zeros, simplify:</b> area 1500:1100:900:500 = 15:11:9:5 (40). Plant 240:180:120:60 = 4:3:2:1 (10). Wages 6:4:3:2 (15). Stock 150:90:60 = 5:3:2 (10). HP 8:5:2 (15). Light 4:3:2:1 (10). Employees 4:3:2:3 (12).`,
+`<b>Step 3. Share = ratio part / ratio total × cost.</b> Rent to A = 15/40 × 10,000 = 3,750.`,
+tb([['Item','Basis','Amount','A','B','C','D'],['Rent','Area 15:11:9:5','10,000','3,750','2,750','2,250','1,250'],['Repairs to plant','Plant 4:3:2:1','6,000','2,400','1,800','1,200','600'],['Dep. of plant','Plant 4:3:2:1','4,500','1,800','1,350','900','450'],['Supervision','Wages 6:4:3:2','15,000','6,000','4,000','3,000','2,000'],['Fire insurance','Stock 5:3:2','5,000','2,500','1,500','1,000','-'],['Power','HP 8:5:2','9,000','4,800','3,000','1,200','-'],['Light','Light 4:3:2:1','1,000','400','300','200','100'],['Employers ins.','Employees 4:3:2:3','1,500','500','375','250','375'],['<b>Total</b>','','<b>52,000</b>','<b>22,150</b>','<b>15,075</b>','<b>10,000</b>','<b>4,775</b>']]),
+`<b>Step 4. Check.</b> The columns add to 52,000. D has no stock and no HP, so it gets nil on those.`,
+`<b>Rate method (professor: do it both ways).</b> Rent rate = 10,000 / 4,000 sq ft = Rs 2.50; A = 1,500 × 2.50 = 3,750. Same.`],
+a:'A 22,150 · B 15,075 · C 10,000 · D 4,775 (total 52,000)'}
+];
+PROB.P9=[
+{s:'Problem Set 3 · Problem 2 (direct method)',q:`Problem 2: for method of direct redistribution
+ABC Ltd has three production departments and four service departments. Per Primary distribution the expenses were:
+Production: A 15000 | B 13000 | C 12000 (total 40000)
+Service departments: Stores 2000 | Time keeping & accounts 1500 | Power 800 | canteen 500 (total 4800)    Total 44800
+
+The following information is also available (Dept A, B, C):
+HP of machines: 300, 300, 200
+No of workers: 20, 15, 15
+Value of stores requisitioned: 2500, 1500, 1000
+
+Apportion the costs of the service departments to the production departments`,
+st:[`<b>Rule:</b> ignore services between service departments. Split each service cost only among A, B, C.`,`<b>Stores</b> by requisition value 5:3:2 → A 1,000 · B 600 · C 400.`,`<b>Time-keeping &amp; accounts</b> by workers 4:3:3 → 600 · 450 · 450.`,`<b>Canteen</b> by workers 4:3:3 → 200 · 150 · 150.`,`<b>Power</b> by HP 3:3:2 → 300 · 300 · 200.`,
+tb([['','A','B','C'],['Primary','15,000','13,000','12,000'],['Stores','1,000','600','400'],['Time-keeping','600','450','450'],['Canteen','200','150','150'],['Power','300','300','200'],['<b>Total</b>','<b>17,100</b>','<b>14,500</b>','<b>13,200</b>']]),`Check: 17,100 + 14,500 + 13,200 = 44,800.`],
+a:'A 17,100 · B 14,500 · C 13,200 (total 44,800)'},
+{s:'Problem Set 3 · Problem 3 (step method)',q:`Problem 3: for step method
+ABC has two production departments: X and Y, and three services departments: Time keeping, stores and maintenance. The departmental distribution summary showed the following expenses:
+Production: X 12000 | Y 8000 (20000)    Service: Stores 2500 | Time-keeping 2000 | Maintenance 1500 (6000)    Total 26000
+
+Other information (X, Y, Stores, Time keeping, Maintenance):
+No of employee: 20, 15, 10, 8, 5
+No of stores requisition: 12, 10, --, --, 3
+Machine hours: 1200, 800, --, --, --
+Apportion the costs to the production department`,
+st:[`<b>Sequence:</b> Time-keeping first (serves the most departments), then Stores, then Maintenance.`,`<b>Bases:</b> Time-keeping by employees: Stores 10 : Maint 5 : X 20 : Y 15 (total 50, its own 8 left out). Stores by requisitions: Maint 3 : X 12 : Y 10 (25). Maintenance by machine hours: X 12 : Y 8 (20).`,
+`<b>Step 1.</b> Time-keeping 2,000 → Stores 400, Maint 200, X 800, Y 600. Closed.`,`<b>Step 2.</b> Stores = 2,500 + 400 = 2,900 → Maint 348, X 1,392, Y 1,160. Closed.`,`<b>Step 3.</b> Maintenance = 1,500 + 200 + 348 = 2,048 → X 1,228.8 (1,229), Y 819.2 (819).`,
+tb([['','Summary','Step 1','Step 2','Step 3','Final'],['X','12,000','800','1,392','1,229','<b>15,421</b>'],['Y','8,000','600','1,160','819','<b>10,579</b>']]),`Total 15,421 + 10,579 = 26,000.`],
+a:'X 15,421 · Y 10,579 (total 26,000)'},
+{s:'Problem Set 3 · Problem 4 (reciprocal method)',q:`Problem 4: for reciprocal method
+ABC Ltd has three production departments A, B, C and two service departments E and F. Primary distribution: A 8000 | B 6500 | C 7000 | E 2340 | F 3000 (total 26840).
+Service departments are charged out as follows (to A, B, C, E, F):
+E: 20%, 25%, 35%, --, 20%
+F: 25%, 25%, 40%, 10%, --
+Distribute the service department costs to the production departments by (i) repeated distribution and (ii) simultaneous equations.`,
+st:[`<b>Method 1: repeated distribution (cycles).</b> Pass each balance out by the percentages and repeat until it is negligible.`,
+tb([['Cycle','Distribute','A','B','C','Left'],['Start','','8,000','6,500','7,000','E 2,340; F 3,000'],['1','E 2,340','8,468','7,085','7,819','F 3,468'],['2','F 3,468','9,335','7,952','9,206.2','E 346.8'],['3','E 346.8','9,404.36','8,038.70','9,327.58','F 69.36'],['4','F 69.36','9,421.70','8,056.04','9,355.32','E 6.94'],['5','E 6.94','9,423.09','8,057.77','9,357.75','F 1.39'],['<b>Final</b>','','<b>≈9,423</b>','<b>≈8,058</b>','<b>≈9,358</b>','']]),
+`<b>Method 2: simultaneous equations (exact).</b> Let E and F be the true costs. E = 2,340 + 0.10 F and F = 3,000 + 0.20 E.`,`Substitute: E = 2,340 + 0.10 (3,000 + 0.20 E) = 2,640 + 0.02 E. So 0.98 E = 2,640 and <b>E = 2,693.88</b>. Then <b>F = 3,000 + 0.20 × 2,693.88 = 3,538.78</b>.`,
+`<b>Distribute true costs.</b> A = 8,000 + 20% E + 25% F = 8,000 + 538.78 + 884.69 = <b>9,423.47</b>. B = 6,500 + 673.47 + 884.69 = <b>8,058.16</b>. C = 7,000 + 942.86 + 1,415.51 = <b>9,358.37</b>.`,`Check: 9,423.47 + 8,058.16 + 9,358.37 = 26,840.`],
+a:'A 9,423.47 · B 8,058.16 · C 9,358.37 (E = 2,693.88, F = 3,538.78)'},
+{s:'Day 4 · Mini example for the three methods (class)',q:`Service S1 costs 1,000 and S2 costs 600. S1's services are used: S2 20%, P1 40%, P2 40%. S2's services are used: S1 10%, P1 50%, P2 40%. P1 and P2 are production departments. Allocate by the direct, step and reciprocal methods.`,
+st:[`<b>Direct.</b> Ignore S1 ↔ S2. S1: P1 : P2 = 40 : 40 → 500 each. S2: P1 : P2 = 50 : 40 = 5 : 4 → 333.33 and 266.67. <b>P1 833.33, P2 766.67.</b>`,`<b>Step (S1 first).</b> S1 1,000 → S2 200, P1 400, P2 400. S2 = 800 split 5:4 → P1 444.44, P2 355.56. <b>P1 844.44, P2 755.56.</b>`,`<b>Reciprocal.</b> S1 = 1,000 + 0.1 S2; S2 = 600 + 0.2 S1. Solve: S1 = 1,081.63, S2 = 816.33. P1 = 0.4 S1 + 0.5 S2 = <b>840.82</b>; P2 = 0.4 S1 + 0.4 S2 = <b>759.18</b>.`,`Every method allocates the same total, 1,600.`],
+a:'Direct 833.33 / 766.67 · Step 844.44 / 755.56 · Reciprocal 840.82 / 759.18'},
+{s:'Day 4 · Single rate vs dual rate (class example)',q:`Maintenance: fixed cost Rs 60,000 (capacity) + variable Rs 2 per hour. Actual hours: X 600, Y 400; planned capacity use: X 50%, Y 50%. Allocate by a single rate and by a dual rate.`,
+st:[`<b>Single rate:</b> total 62,000 / 1,000 hrs = Rs 62 per hour → X 37,200; Y 24,800.`,`<b>Dual rate:</b> variable pool by actual hours: X 1,200; Y 800. Fixed pool by planned use: X 30,000; Y 30,000.`,`<b>Total:</b> X Rs 31,200; Y Rs 30,800.`],
+a:'Single: X 37,200, Y 24,800 · Dual: X 31,200, Y 30,800'}
+];
+PROB.P7=[PROB.P5[1]];PROB.P5=[PROB.P5[0]];
+
+PROB.P10=[
+{s:'Day 4 · Walk Through 14.7 and Day 5 · Walk Through 14.8 (phone plan)',q:`Allocating common costs. Your brother's own plan would cost 75. Your own plan would cost 85. The joint plan (family plan) costs 115 in total.
+14.7: allocate the 115 by the stand-alone method.
+14.8: allocate the 115 by the incremental method (the brother is the primary user, and then you as primary user).`,
+st:[`<b>Stand-alone (14.7).</b> Step 1: stand-alone costs 75 + 85 = 160.`,`Step 2: weights. Brother 75/160 = 47%; you 85/160 = 53%.`,`Step 3: share the actual common cost in those weights. Brother 47% × 115 = <b>54.05</b>; you 53% × 115 = <b>60.95</b>. Total 115. Both save.`,
+`<b>Incremental (14.8), brother primary.</b> Step 1: rank the users. Step 2: primary user pays his stand-alone cost: brother <b>75</b>. Step 3: the next user pays the extra: you 115 − 75 = <b>40</b>.`,`<b>Incremental, you primary.</b> You 85; brother 115 − 85 = <b>30</b>.`,`Brother objects to paying the same and getting no saving, so the two compromise at 57.50 each.`,`The slide rounds the weights to 47% / 53%. Exact fractions give 53.91 / 61.09. Use the rounding your professor shows.`],
+a:'Stand-alone: brother 54.05, you 60.95 · Incremental (brother first): 75 and 40 · (you first): 85 and 30'}
+];
+PROB.P11=[
+{s:'Day 5 · Account analysis (Dover Manufacturing water bill)',q:`Dover Manufacturing's water bill: a meter base fee of $770 (fixed) and $1,709 for 1,220 units of water used (variable) this month. Estimate the water cost for a year. What if next year it uses 10% less water?`,
+st:[`<b>Method 1, account analysis: read the bill and judge fixed vs variable.</b>`,`Fixed for a year = 770 × 12 = <b>9,240</b>.`,`Variable for a year (every month average) = 12 × 1,709 = 20,508. Total = <b>29,748</b>.`,`10% less water: fixed stays 9,240; variable = 90% × 1,709 × 12 = 18,457.20. Total = <b>27,697.20</b>.`],
+a:'Year: $29,748 · With 10% less water: $27,697.20'},
+{s:'Day 5 · High-low method',q:`Deck example: the lowest activity point is (3, $9) and the highest is (12, $15). Find the cost equation Y = mX + b.
+Dover data: the highest is 450 machine hours with $15,000 and the lowest is 150 hours with $10,800. Find m and b.`,
+st:[`<b>Step 1.</b> Pick the highest and lowest activity (X) with their costs (Y).`,`<b>Step 2. Slope</b> m = (Y high − Y low) / (X high − X low) = (15 − 9)/(12 − 3) = <b>0.67</b>.`,`<b>Step 3.</b> Put one point in Y = mX + b: 15 = 0.67 × 12 + b, so <b>b = 6.96</b>. Equation: <b>Y = 0.67 X + 6.96</b>.`,`<b>Dover:</b> m = (15,000 − 10,800)/(450 − 150) = <b>$14.00</b> per hour. b = 10,800 − 14 × 150 = <b>$8,700</b>.`,`High-low uses only two points, so an odd month can distort it.`],
+a:'Y = 0.67X + 6.96 · Dover: m = $14.00 per hour, b = $8,700'},
+{s:'Day 5 · Regression (Xavier Company, 13 months)',q:`Machine hours (col A): 193, 239, 450, 150, 275, 394, 259, 414, 437, 226, 266, 428, 385.
+Factory repair and maintenance cost (col B): $11,000, 11,822, 15,000, 10,800, 16,548, 14,437, 12,526, 14,743, 15,693, 11,661, 12,021, 14,817, 14,664.
+Use regression to find the cost equation.`,
+st:[`<b>Excel steps:</b> turn on the Analysis ToolPak. Data tab → Data Analysis → Regression → OK.`,`Input Y Range = cost column (B1:B14). Input X Range = machine hours column (A1:A14). Tick Labels. New Worksheet Ply. OK.`,`<b>Read the output.</b> Intercept coefficient 8,773.72 = fixed cost b. Machine Hours coefficient 14.98 = variable cost per hour m. R Square 0.65.`,`<b>Equation: Y = 14.98 X + 8,773.72.</b> Without the ToolPak: =SLOPE(B2:B14, A2:A14), =INTERCEPT(B2:B14, A2:A14), =RSQ(...).`,`Regression 14.98 and high-low 14.00 differ because regression uses all 13 points.`],
+a:'Y = 14.98X + 8,773.72 · R² = 0.65'}
+];
+PROB.P12=[
+{s:'Day 5 · Absorption vs variable costing example',q:`The company made 4,000 units and sold 3,800 (inventory 200 units). Variable cost per unit $10 (DM + DL + variable MOH). Fixed MOH $50,000. Sales $190,000. Variable operating expenses $19,000; fixed operating expenses $80,000. Prepare the income statement under absorption costing and under variable costing.`,
+st:[`<b>Unit cost.</b> Fixed MOH per unit = 50,000 / 4,000 = 12.50. <b>Absorption unit cost = 10 + 12.50 = 22.50.</b> Variable costing unit cost = <b>10</b>.`,`<b>Closing FG.</b> Absorption 200 × 22.50 = <b>4,500</b>. Variable 200 × 10 = <b>2,000</b>.`,`<b>Absorption statement.</b> Sales 190,000 − COGS (3,800 × 22.50 = 85,500) = GM 104,500. Less operating expenses 19,000 + 80,000 = 99,000. <b>Operating income 5,500</b>.`,`<b>Variable statement.</b> Variable expenses = 3,800 × 10 = 38,000 + 19,000 = 57,000. CM = 190,000 − 57,000 = 133,000. Less fixed 50,000 + 80,000 = 130,000. <b>Operating income 3,000</b>.`,`<b>Difference</b> = 5,500 − 3,000 = 2,500 = 200 units × 12.50 (change in inventory × fixed MOH per unit).`],
+a:'Absorption OI 5,500 · Variable OI 3,000 · Difference 2,500'},
+{s:'Day 5 · Contribution format vs traditional format ($000)',q:`Revenue 1,000; variable manufacturing costs 250; variable non-manufacturing costs 270; fixed manufacturing 160; fixed non-manufacturing 138. Prepare both formats.`,
+st:[`<b>Contribution:</b> 1,000 − (250 + 270) = <b>480</b>. Less fixed 160 + 138 = 298. <b>Operating income 182</b>.`,`<b>Traditional:</b> COGS = 250 + 160 = 410. Gross margin = <b>590</b>. Less non-manufacturing 270 + 138 = 408. <b>Operating income 182</b>.`],
+a:'Contribution margin 480 · Gross margin 590 · Operating income 182'},
+{s:'Day 5 · Marginal cost example',q:`Direct material Rs 40,000; direct labour Rs 20,000; variable OH Rs 20,000; fixed OH Rs 20,000; production 10,000 units. Find the marginal cost.`,
+st:[`Prime cost = 40,000 + 20,000 = 60,000.`,`<b>Marginal cost = prime cost + variable OH</b> = 60,000 + 20,000 = <b>80,000</b>.`,`Per unit = 80,000 / 10,000 = <b>Rs 8.00</b>. The fixed OH of 20,000 is left out.`],
+a:'Marginal cost Rs 80,000 (Rs 8.00 a unit)'}
+];
+PROB.P13=[
+{s:'Day 5 · Racing Bicycle Company (RBC): base case',q:`RBC sells bikes at $500. Variable cost is $300 per bike. Fixed expenses are $80,000 per month. Find CM per unit, CM ratio, break-even in units and dollars. How many bikes must be sold to earn a profit of $100,000?`,
+st:[`<b>CM per unit</b> = 500 − 300 = <b>200</b>. <b>CM ratio</b> = 200/500 = <b>40%</b>.`,`<b>Break-even units</b> = FC / CM per unit = 80,000/200 = <b>400</b>. <b>Break-even sales</b> = FC / CM ratio = 80,000/0.40 = <b>$200,000</b>.`,`<b>Target profit units</b> = (FC + TP)/CM per unit = (80,000 + 100,000)/200 = <b>900 bikes</b>. Dollars = 180,000/0.40 = <b>$450,000</b>.`,`<b>Shortcut above break-even:</b> income = (units − BE units) × CM per unit. At 430 bikes: 30 × 200 = 6,000.`],
+a:'CM 200 · 40% · BE 400 bikes / $200,000 · Target $100,000: 900 bikes / $450,000'},
+{s:'Day 5 · Emma',q:`Emma has fixed costs of $2,000 and a contribution margin percentage of 40%. If Emma wants to make a profit of $2,000, what must revenue equal? What if Emma wants to make a profit of $3,000, what must revenue equal?`,
+st:[`Formula: (Fixed Cost + Target Operating Income) / Contribution Margin %.`,`Profit 2,000: (2,000 + 2,000)/0.40 = <b>$10,000</b>.`,`Profit 3,000: (2,000 + 3,000)/0.40 = <b>$12,500</b>.`],a:'$10,000 and $12,500'},
+{s:'Day 5 · Tee Times (golf clubs, with tax)',q:`Tee Times, Inc. produces and sells the finest quality golf clubs in all of Clay County. The company expects the following revenues and costs in 2004 for its Elite Quality golf club sets:
+Revenues (400 sets sold @ 600 per set) 240,000 | Variable costs 160,000 | Fixed costs 50,000
+9. How many sets of clubs must be sold for Tee Times, Inc. to reach their breakeven point? a. 400 b. 250 c. 200 d. 150
+11. What amount of sales must Tee Times, Inc. have to earn a target net income of 63,000 if they have a tax rate of 30 percent? a. 489,000 b. 429,000 c. 420,000 d. 300,000`,
+st:[`<b>CM per set</b> = 600 − 160,000/400 (= 400) = <b>200</b>.`,`<b>Q9 break-even</b> = 50,000/200 = <b>250 sets</b> (b).`,`<b>Q11. Net to operating income:</b> operating income = net income / (1 − tax rate) = 63,000 / 0.70 = <b>90,000</b>. The CVP equation always uses operating (pre-tax) income.`,`<b>Units</b> = (50,000 + 90,000)/200 = 700 sets. <b>Sales</b> = 700 × 600 = <b>$420,000</b> (c).`],
+a:'Q9: 250 sets (b) · Q11: $420,000 (c)'},
+{s:'Day 5 · Coffee Klatch questions (CP 1–4, 8, 14–16)',q:`Coffee Klatch is an espresso stand in a downtown office building. The average selling price of a cup of coffee is $1.49 and the average variable expense per cup is $0.36. The average fixed expense per month is $1,300. An average of 2,100 cups are sold each month.
+(a) Use the formula method to determine how many cups would have to be sold to attain target profits of $2,500 per month. [a. 3,363 b. 2,212 c. 1,150 d. 4,200]
+(b) Sales dollars needed for target profit of $2,500. [a. $2,550 b. $5,013 c. $8,458 d. $10,555]
+(c) What is the break-even sales in units? [a. 872 b. 3,611 c. 1,200 d. 1,150 cups]
+(d) What is the break-even sales dollars? [a. $1,300 b. $1,715 c. $1,788 d. $3,129]
+(e) What is the CM Ratio? [a. 1.319 b. 0.758 c. 0.242 d. 4.139]
+(f) Margin of safety in cups; operating leverage; and by what % income rises if sales rise 20%.`,
+st:[`<b>CM per cup</b> = 1.49 − 0.36 = <b>1.13</b>. <b>CM ratio</b> = 1.13/1.49 = <b>0.758</b> (b).`,`<b>(a) Units</b> = (2,500 + 1,300)/1.13 = <b>3,363</b> (a).`,`<b>(b) Dollars</b> = 3,800/0.758 = <b>$5,013</b> (b).`,`<b>(c) Break-even units</b> = 1,300/1.13 = <b>1,150</b> (d).`,`<b>(d) Break-even dollars</b> = 1,150 × 1.49 = 1,300/0.758 ≈ <b>$1,715</b> (b).`,`<b>(f) MOS</b> = 2,100 − 1,150 = <b>950 cups</b>. <b>OL</b> = CM / income = (2,100 × 1.13 = 2,373) / (2,373 − 1,300 = 1,073) = <b>2.21</b>. <b>Income rises</b> = 2.21 × 20% = <b>44.2%</b>.`,`Units use CM <b>per unit</b>. Dollars use the CM <b>ratio</b>.`],
+a:'3,363 cups · $5,013 · 1,150 cups · $1,715 · 0.758 · MOS 950 · OL 2.21 · 44.2%'},
+{s:'Day 5 · Margin of safety and operating leverage (RBC)',q:`Let's look at Racing Bicycle Company and determine the margin of safety. Actual sales are $250,000 (500 bikes) and break-even sales are $200,000. Then find the degree of operating leverage and the effect of a 10% rise in sales.`,
+st:[`<b>MOS</b> = budgeted sales − break-even sales = 250,000 − 200,000 = <b>$50,000</b>.`,`<b>MOS ratio</b> = 50,000/250,000 = <b>20%</b>. In bikes: 50,000/500 = <b>100 bikes</b>.`,`<b>OL</b> = CM / operating income. CM = 500 × 200 = 100,000. Income = 100,000 − 80,000 = 20,000. OL = <b>5</b>.`,`<b>% change in income</b> = OL × % change in sales = 5 × 10% = <b>50%</b>. Check: 550 bikes × 200 = 110,000 − 80,000 = 30,000 (up 50%).`],
+a:'MOS $50,000 (20%, 100 bikes) · OL 5 · income +50%'}
+];
+PROB.P14=[
+{s:'Day 5 · Savor the Flavor (multi-product break-even)',q:`Savor the Flavor has a small, no-frills ice cream cart by the beach.
+Strawberry cones sell for $3.00 each, have a variable cost of $0.50, and represent 25% of the 10,000 total units sold.
+Lemon popsicles sell for $1.50 each, have a variable cost of $0.25, and represent 15% of total sales.
+Ice cream sandwiches sell for $2.00 each, have a variable cost of $0.80, and represent 60% of total sales.
+Fixed costs of the cart total $5,000 for the season.
+Let's solve for the company's break-even point in units.`,
+st:[`<b>Step 1. CM per unit:</b> cone 3.00 − 0.50 = 2.50; popsicle 1.50 − 0.25 = 1.25; sandwich 2.00 − 0.80 = 1.20.`,`<b>Step 2. WACM</b> = 0.25 × 2.50 + 0.15 × 1.25 + 0.60 × 1.20 = 0.625 + 0.1875 + 0.72 = <b>$1.5325</b>.`,`<b>Step 3. Break-even units</b> = FC / WACM = 5,000 / 1.5325 = <b>3,263</b>.`,`<b>Step 4. Split by mix:</b> cone 25% = 816; popsicle 15% = 489; sandwich 60% = 1,958.`,`The slide prints 3,247 (812 / 487 / 1,948), which is 5,000 over a rounded WACM of about 1.54. Quote the slide's figure if your professor does.`],
+a:'WACM $1.5325 · Break-even 3,263 units (slide: 3,247)'},
+{s:'Day 6 · Example 5 (change in sales mix)',q:`Eg 5: Products M, N, O and P. Fixed costs Rs 29,400.
+Product (M, N, O, P, Total):
+Sales (in Rs.): 40,000, 50,000, 20,000, 10,000, 1,20,000
+Variable cost (in Rs.): 24,000, 34,000, 16,000, 4,000, 78,000
+Contribution: 16,000, 16,000, 4,000, 6,000, 42,000
+Contribution/sales: 0.4, 0.32, 0.2, 0.6
+Fixed costs 29,400 | Profit 12,600
+New product mix: sales 30,000, 44,000, 40,000, 6,000 (total 1,20,000). Find the profit under the new mix.`,
+st:[`<b>Step 1. Contribution ratio</b> (P/V) per product: 0.40, 0.32, 0.20, 0.60.`,`<b>Step 2. New contribution = new sales × ratio:</b> M 30,000 × 0.40 = 12,000; N 44,000 × 0.32 = 14,080; O 40,000 × 0.20 = 8,000; P 6,000 × 0.60 = 3,600. Total <b>37,680</b>.`,`<b>Step 3.</b> Profit = 37,680 − 29,400 = <b>8,280</b> (old mix 12,600).`,`Profit falls by 4,320 because sales moved toward O (low ratio) and away from M and P. Shift the mix toward high-ratio products to raise profit.`],
+a:'New profit Rs 8,280 (down Rs 4,320)'}
+];
+PROB.P15=[
+{s:'Day 5 · RBC what-if cases 1 to 4',q:`Base case: 500 bikes, price $500, variable $300, fixed $80,000.
+1. What is the profit impact if Racing Bicycle can increase unit sales from 500 to 540 by increasing the monthly advertising budget by $10,000?
+2. What is the profit impact if Racing Bicycle can use higher quality raw materials, thus increasing variable costs per unit by $10, to generate an increase in unit sales from 500 to 580?
+3. Price drops $20 (to $480), advertising rises $15,000 and sales rise from 500 to 650.
+4. A $15 commission per bike replaces $6,000 of flat salaries; sales rise from 500 to 575.`,
+st:[`<b>Base income</b> = 500 × 200 − 80,000 = <b>20,000</b>. Use incremental analysis: only the change in CM and the change in fixed cost.`,`<b>Case 1.</b> Extra CM = 40 × 200 = 8,000. Extra fixed 10,000. Change = <b>−2,000</b>.`,`<b>Case 2.</b> CM per unit = 190. 580 × 190 = 110,200 − 80,000 = 30,200. Change = <b>+10,200</b>.`,`<b>Case 3.</b> CM per unit 180. 650 × 180 = 117,000 − (80,000 + 15,000) = 22,000. Change = <b>+2,000</b>.`,`<b>Case 4.</b> CM per unit 185. 575 × 185 = 106,375 − (80,000 − 6,000) = 32,375. Change = <b>+12,375</b>.`],
+a:'Case 1 −$2,000 · Case 2 +$10,200 · Case 3 +$2,000 · Case 4 +$12,375'},
+{s:'Day 5 · RBC what-if case 5 (special order)',q:`If RBC has an opportunity to sell 150 bikes to a wholesaler without disturbing sales to other customers or fixed expenses, what price would it quote to the wholesaler if it wants to increase monthly profits by $3,000?`,
+st:[`Fixed costs do not change, so the order only needs to cover variable cost plus the extra profit wanted.`,`<b>Price</b> = variable cost + extra profit per unit = 300 + 3,000/150 = 300 + 20 = <b>$320</b>.`],a:'Quote $320 per bike'}
+];
+PROB.P16=[
+{s:'Day 5 · Example 1 (Modern Engineering: minimum price in a recession)',q:`Eg 1 In the face of the trade recession, M/s Modern Engineering Ltd., is having a difficult period due to lack of government orders and is operating below 60 per cent of its normal capacity. This is, however, considered to be a temporary phase and the management has taken a decision not to retrench labour. An enquiry has been received for 10,000 units of a product which could be manufactured by the company under the existing capacity, and the cost data is as follows:
+Direct labour Re. 1 per hour | Time required 1 hour per unit | Direct material Rs. 2 per unit | Variable O.H. 400 per cent of direct labour | Fixed O.H. 600 per cent of direct labour | Cost of special tools Rs. 25,000
+What is the minimum price you would recommend?`,
+st:[`<b>Idle capacity, so fixed cost is not relevant.</b> Take only variable cost and any new cost caused by the order.`,`DM 2.00. DL 1 hour × Re 1 = 1.00. Variable OH 400% × 1 = 4.00.`,`Special tools are new: 25,000 / 10,000 = 2.50.`,`<b>Minimum price</b> = 2.00 + 1.00 + 4.00 + 2.50 = <b>Rs 9.50</b> per unit.`],a:'Rs 9.50 per unit'},
+{s:'Day 5 · Example 2 (umbrella maker)',q:`Eg 2 An umbrella manufacturer makes an average net profit of Rs. 2.50 per piece in a selling price of Rs. 14.30 by producing and selling 60,000 pieces or 60% of the potential capacity. His cost of sales is:
+Direct material Rs. 3.50 | Direct wages Rs. 1.25 | Works overheads Rs. 6.25 (50% fixed) | Sales overheads Re. 0.80 (25% varying)
+During the current year he intends to produce the same number but anticipates that his fixed charge will go up by 10% while the rates of direct labour and direct material will increase by 8% and 6% respectively. But he has no option of increasing the selling price (because of recession). Under this situation, he obtains an offer for a further 20% of his capacity. What minimum price you will recommend for acceptance to ensure the manufacturer an overall profit of Rs. 1.673 lakhs?`,
+st:[`<b>Today's variable cost:</b> DM 3.50 + wages 1.25 + works OH variable 3.125 (50% × 6.25) + sales OH variable 0.20 (25% × 0.80) = <b>8.075</b>.`,`<b>Fixed cost per piece today</b> = 14.30 − 8.075 − 2.50 profit = 3.725. Total fixed = 60,000 × 3.725 = <b>2,23,500</b>.`,`<b>New situation.</b> DM 3.50 × 1.06 = 3.71. Wages 1.25 × 1.08 = 1.35. Variable cost = 3.71 + 1.35 + 3.125 + 0.20 = <b>8.385</b>. Fixed = 2,23,500 × 1.10 = <b>2,45,850</b>.`,`<b>Contribution needed</b> = fixed 2,45,850 + profit 1,67,300 = 4,13,150.`,`<b>From the 60,000 pieces</b> at Rs 14.30: (14.30 − 8.385) × 60,000 = 5.915 × 60,000 = 3,54,900.`,`<b>Balance from 20,000 pieces</b> = 4,13,150 − 3,54,900 = 58,250 = Rs 2.9125 a piece.`,`<b>Minimum price</b> = 8.385 + 2.9125 = <b>Rs 11.2975</b>. (The slide prints 2.9215 by a typing slip.)`],a:'Rs 11.2975 per piece'},
+{s:'Day 5 · Example 3 (AB Ltd, scarce labour)',q:`Eg 3 AB Ltd. makes a single product which sells for $ 20. There is great demand for this product. The unit variable cost of $12 shows the following details: Direct materials 4 | Direct labour (2 hours) 6 | Variable overheads 2 | Total 12
+The labour force is currently working at full capacity and no extra time can be made available. A customer has approached AB Ltd. with a request for the manufacture of a special order, for which he is willing to pay $5,500. The costs of the order would be $ 2,000 for direct materials and 500 labour hours will be required. Should the order be accepted?`,
+st:[`<b>Contribution per unit</b> = 20 − 12 = 8. <b>Per labour hour</b> = 8 / 2 hours = <b>$4</b>.`,`<b>Cost of the order:</b> DM 2,000 + DL 500 × 3 = 1,500 + variable OH 500 = <b>4,000</b>.`,`<b>Opportunity cost</b> (labour is full): 500 hours × 4 = <b>2,000</b> of contribution lost.`,`<b>Total cost</b> = 4,000 + 2,000 = 6,000. Price offered 5,500. <b>Loss 500, so do not accept.</b>`,`If labour were spare, opportunity cost would be nil and the order would add 1,500.`],a:'Reject: loss of $500 (cost incl. opportunity cost $6,000 vs price $5,500)'},
+{s:'Day 6 · Example 4 (overseas contract vs local advertising)',q:`Eg 4 A company is working at 60% of potential capacity. The Sales Manager has reported two available solutions for increasing sales:
+(a) By an overseas contract which calls for delivery, spread equally for a period of three years totaling Rs.15,00,000
+(b) Local sales can be increased by 50 per cent if Rs.50,000 is spent on special advertising.
+The following is a summarised analysis of the profit and loss account for the previous year (Rs. lakhs): Materials used 4.50 | Direct labour 5.10 | Manufacturing expenses: Fixed 1.75, Variable 0.75 | Selling expenses: Variable 1.50 | Administration expenses: Fixed 1.00 | Total 14.60 | Profit 0.40 | Sales 15.00
+It is estimated that additional selling expenses on export sales will be 5 per cent of sales value. Decide whether the directors would adopt (a) or (b) or a feasible combination of (a) and (b).`,
+st:[`<b>Step 1. Classify.</b> Fixed = 1.75 + 1.00 = <b>2.75</b>. The rest vary with sales.`,`<b>(a) Overseas, 5.00 a year.</b> Materials 4.50 × 5/15 = 1.50. Labour 1.70. Variable manufacturing 0.25. Variable selling 0.50. Additional selling 5% × 5.00 = 0.25. Variable cost 4.20. <b>Contribution = 5.00 − 4.20 = 0.80.</b> Total profit = 0.40 + 0.80 = <b>1.20</b>.`,`<b>(b) Local +50% = 22.50.</b> Materials 6.75 + labour 7.65 + manufacturing 1.125 + selling 2.25 = 17.775. Contribution = 4.725 (21%). Fixed 2.75 + 0.50 advertising = 3.25. <b>Profit 1.475.</b>`,`<b>Combination.</b> Capacity: 15.00 is 60%, so full is 25.00. Export 5.00 + domestic 20.00 = 25.00. Contribution 0.80 + 20.00 × 21% (4.20) = 5.00. Fixed 3.25. <b>Profit 1.75.</b>`,`<b>Decision:</b> adopt the combination (1.75 vs 1.20 and 1.475).`],a:'(a) 1.20 · (b) 1.475 · Combination 1.75 lakh → adopt the combination'}
+];
+PROB.P17=[
+{s:'Day 6 · Breakers, Inc. master budget (worked example)',q:`Breakers, Inc. is preparing budgets for the quarter ending June 30. Budgeted sales for the next five months are: April 20,000 units | May 50,000 | June 30,000 | July 25,000 | August 15,000. The selling price is $10 per unit.
+Production: management wants ending inventory to be equal to 20% of the following month's budgeted sales in units. On March 31, 4,000 units were on hand.
+Materials: five Kg of material are required per unit. Materials on hand at the end of each month equal to 10% of the following month's production. On March 31, 13,000 kg are on hand. Material cost $.40 per kg.
+Direct labor: each unit requires 0.1 hours. "No layoff" policy: workforce is paid a minimum of 3,000 hours per month at $8 per hour (no overtime).
+Selling and administrative: variable $0.50 per unit sold; fixed $70,000 per month including $10,000 depreciation.
+Collections (all sales on account): 70% in the month of sale, 25% in the month following, 5% uncollected. March 31 receivables $30,000 collected in full.
+Materials are paid 50% in the month of purchase and 50% the month after; March 31 payables $12,000.
+Cash: opening $40,000; minimum $30,000; credit line at 12% to $75,000, borrow and repay at month end; dividend $25,000 in April; equipment $143,700 in May and $48,300 in June.
+Prepare the sales, production, direct material, direct labor, cash receipts, cash disbursement and cash budgets, and the budgeted income statement.`,
+st:[`<b>Order:</b> sales → production → direct material, direct labor, overhead, S&amp;A → collections and payments → cash budget → COGM and COGS → income statement.`,`<b>Sales.</b> April 200,000; May 500,000; June 300,000; quarter 1,000,000.`,`<b>Production units = sales + desired ending − beginning.</b>`+tb([['','Apr','May','Jun'],['Sales','20,000','50,000','30,000'],['+ Ending (20% next)','10,000','6,000','5,000'],['− Beginning','4,000','10,000','6,000'],['<b>Produce</b>','<b>26,000</b>','<b>46,000</b>','<b>29,000</b>']]),
+`<b>Direct materials (kg) = needs + desired ending − beginning.</b>`+tb([['','Apr','May','Jun'],['Needs (5 × units)','130,000','230,000','145,000'],['+ Ending (10% next month)','23,000','14,500','11,500'],['− Beginning','13,000','23,000','14,500'],['<b>Purchase kg</b>','<b>140,000</b>','<b>221,500</b>','<b>142,000</b>'],['Cost at 0.40','56,000','88,600','56,800']]),
+`<b>Direct labor.</b> Hours paid = the greater of hours required and 3,000. Apr 2,600 → 3,000 h = 24,000. May 4,600 h = 36,800. Jun 2,900 → 3,000 h = 24,000.`,
+`<b>Cash receipts.</b> Apr 30,000 + 70% × 200,000 = <b>170,000</b>. May 25% × 200,000 + 70% × 500,000 = <b>400,000</b>. Jun 25% × 500,000 + 70% × 300,000 = <b>335,000</b>.`,
+`<b>Cash for materials (50/50).</b> Apr 12,000 + 28,000 = <b>40,000</b>. May 28,000 + 44,300 = <b>72,300</b>. Jun 44,300 + 28,400 = <b>72,700</b>.`,
+`<b>Cash disbursements besides materials:</b> labor 24,000 / 36,800 / 24,000; overhead 56,000 / 76,000 / 59,000; S&amp;A cash (total − 10,000 depreciation) 70,000 / 85,000 / 75,000.`,
+`<b>Cash budget.</b>`+tb([['','Apr','May','Jun'],['Beginning cash','40,000','30,000','30,000'],['+ Collections','170,000','400,000','335,000'],['− Disbursements (incl. equipment, dividend)','215,000','413,800','279,000'],['Excess / (deficiency)','(5,000)','16,200','86,000'],['Borrow / (repay)','35,000','13,800','(48,800)'],['Interest','','','(838)'],['<b>Ending cash</b>','<b>30,000</b>','<b>30,000</b>','<b>36,362</b>']]),
+`<b>Interest at 12%:</b> 35,000 × 12% × 2/12 = 700; 13,800 × 12% × 1/12 = 138. Total <b>838</b>.`,
+`<b>COGM and COGS.</b> Unit cost 119,600 / 26,000 = 4.60. COGM quarter = <b>464,600</b>. COGS = 18,400 + 464,600 − 23,000 = <b>460,000</b> (100,000 × 4.60).`,
+`<b>Income statement.</b> Revenue 1,000,000 − COGS 460,000 = GM 540,000. Less S&amp;A 260,000 and interest 838. <b>Net income = 279,162.</b>`],
+a:'Production 26,000 / 46,000 / 29,000 · Purchases 140,000 / 221,500 / 142,000 kg · Ending cash 30,000 / 30,000 / 36,362 · Net income 279,162'},
+{s:'Day 6 · Practice problems 1 to 9 (production, purchases, collections, cash)',q:`(Slide images; wording condensed to the data on each slide.)
+1. Bison: purchases in August (sales 1,950; ending inventory 300; July ending inventory 210).
+2. Swansong: purchases for the quarter to Sept 30 (sales 10,000, 11,000, 12,100; ending 950; opening 1,100).
+3. Coleman: July production (sales 50,000; ending inventory 40% of next month's sales 48,000; beginning 40% of 50,000).
+4. Tidewater: raw material purchases (units to make 85,000 + 17,000 − 11,000; 3 kg a unit; 20,000 ending, 29,000 beginning).
+5. Northcutt: July direct labour (deluxe 1,000 units × 2.25 h; standard 5,000 × 2 h; $15 an hour).
+6. Quattro: June collections (30% in the month of sale, 60% next, 10% the month after; sales 70,000, 80,000, 60,000).
+7. Verna: receivables at Dec 31 (80% collected in the month, 10% the next; sales 50,000 and 60,000).
+8. Phineus: July cash disbursements (operating expenses 180,000 incl. depreciation 60,000; June purchases 220,000; earlier 50,000; 40% of 560,000).
+9. Wolverine: change in cash in February.`,
+st:[`<b>Production / purchases = sales (or needs) + desired ending − beginning.</b>`,`<b>1.</b> 1,950 + 300 − 210 = <b>2,040</b> (C).`,`<b>2.</b> Sales 33,100 + 950 − 1,100 = <b>32,950</b> (C).`,`<b>3.</b> 50,000 + 19,200 − 20,000 = <b>49,200</b> (B).`,`<b>4.</b> Units 91,000 × 3 = 273,000 kg; + 20,000 − 29,000 = <b>264,000</b> (C).`,`<b>5.</b> 1,000 × 2.25 = 2,250 h + 5,000 × 2 = 10,000 h = 12,250 h × 15 = <b>$183,750</b> (A).`,`<b>6. Collections</b> = sum of % of each month's sales: 30% × 70,000 + 60% × 80,000 + 10% × 60,000 = 21,000 + 48,000 + 6,000 = <b>$75,000</b> (D).`,`<b>7.</b> 80% × 50,000 + 10% × 60,000 = 40,000 + 6,000 = <b>$46,000</b> (B).`,`<b>8.</b> Cash items only (depreciation is non-cash): 120,000 + 220,000 + 50,000 + 224,000 = <b>$674,000</b> (C).`,`<b>9.</b> Collections 43,000 − purchases 32,000 − cash expenses 6,500 = <b>+$4,500</b> (B).`],
+a:'1 C 2,040 · 2 C 32,950 · 3 B 49,200 · 4 C 264,000 · 5 A $183,750 · 6 D $75,000 · 7 B $46,000 · 8 C $674,000 · 9 B +$4,500'},
+{s:'Day 6 · Practice problem 10 (Gingham Company) and 11 (Tiara Company)',q:`(Slide images; wording condensed to the data.)
+10. Gingham Company: sales are collected 50% in the month, 30% next, 19% the month after, 1% uncollectible. Purchases are paid the next month with a 3% discount. Find cash at the end of January, receipts in February, payments in February, cash at the end of February. (Opening cash 88,000; January sales 120,000; February sales 110,000; remaining receivables 58,000; January purchases 78,000; expenses 24,000 a month including 5,000 depreciation.)
+11. Tiara Company: collections 70% in the month of sale, 15% next, 10% the month after, 4% the third month, 1% uncollectible. Credit sales July 30,000; August 35,000; September 40,000; October 45,000; November 50,000; December 42,500. A. October collections. B. Collections in the fourth quarter.`,
+st:[`<b>Gingham, end of January:</b> receipts 35,000 + 50% × 120,000 = 95,000. Payments 72,000 × 0.97 = 69,840 + expenses 24,000 − 5,000 = 19,000. Cash = 88,000 + 95,000 − 88,840 = <b>$94,160</b> (D).`,`<b>February receipts:</b> 58,000 − 35,000 = 23,000 + 30% × 120,000 = 36,000 + 50% × 110,000 = 55,000 = <b>$114,000</b> (E).`,`<b>February payments:</b> 78,000 × 0.97 = 75,660 + 19,200 = <b>$94,860</b> (B). <b>End February</b> = 94,160 + 114,000 − 94,860 = <b>$113,300</b> (E).`,
+`<b>Tiara.</b> October: 4% × 30,000 + 10% × 35,000 + 15% × 40,000 + 70% × 45,000 = 1,200 + 3,500 + 6,000 + 31,500 = <b>$42,200</b>.`,`November: 1,400 + 4,000 + 6,750 + 35,000 = <b>47,150</b>. December: 1,600 + 4,500 + 7,500 + 29,750 = <b>43,350</b>.`,`<b>B. Fourth quarter</b> = 42,200 + 47,150 + 43,350 = <b>$132,700</b>.`],
+a:'Gingham: 94,160 · 114,000 · 94,860 · 113,300 · Tiara: October 42,200; Q4 132,700'}
+];
+PROB.P18=[
+{s:'Day 6 · Cheese Company (static vs flexible budget)',q:`Static budget at 10,000 machine hours: indirect labour $40,000, indirect materials $30,000, power $5,000, depreciation $12,000, insurance $2,000; total $89,000. Actual machine hours were only 8,000 and actual overhead cost $77,300 (indirect labour 34,000; indirect materials 25,500; power 3,800; depreciation 12,000; insurance 2,000). How much of the favourable cost variance is due to lower activity and how much to good cost control?`,
+st:[`<b>Static comparison (misleading):</b> 89,000 − 77,300 = 11,700 F. It is mostly due to making less.`,`<b>Step 1. Variable cost per hour:</b> indirect labour 40,000/10,000 = 4.00; indirect materials 3.00; power 0.50. Total <b>7.50 per hour</b>.`,`<b>Step 2. Fixed cost does not flex:</b> 12,000 + 2,000 = 14,000.`,`<b>Step 3. Flexed budget = variable rate × actual hours + fixed</b> = 7.50 × 8,000 + 14,000 = 60,000 + 14,000 = <b>74,000</b>.`,`<b>Step 4. Variance = actual − flexed.</b>`+tb([['','Flexed 8,000','Actual','Variance'],['Indirect labour','32,000','34,000','2,000 U'],['Indirect materials','24,000','25,500','1,500 U'],['Power','4,000','3,800','200 F'],['Fixed','14,000','14,000','0'],['<b>Total</b>','<b>74,000</b>','<b>77,300</b>','<b>3,300 U</b>']]),`The plant overspent by 3,300. Cost control was poor, not good.`],
+a:'Flexed budget 74,000 · Variance 3,300 unfavourable'},
+{s:'Day 6 · Flexible budget questions (slides 101 to 105)',q:`(Slide images; wording condensed to the data.)
+Interspace: static budget for sales commissions was 29,000 units × $6; actual commissions were $182,700. Variance?
+Gridiron: the flexible budget at 27,500 units × $6 per unit; actual commissions $171,400. Variance?
+Trois Elles: flexible budget at 60,000 units (DM 120,000 + DL 60,000 + variable OH 90,000 + fixed 100,000). Actual cost 110,000 + 60,000 + 100,000 + 97,000. Variance?
+Young: variable cost of 135,000 at 30,000 hours (180,000 at 40,000; 225,000 at 50,000), fixed cost 720,000. (a) The flexible-budget formula. (b) Budget at 35,000 hours.`,
+st:[`<b>Interspace (static):</b> budget 29,000 × 6 = 174,000; actual 182,700. Variance = actual − budget = <b>8,700 U</b> (C).`,`<b>Gridiron (flexed):</b> 27,500 × 6 = 165,000; actual 171,400. <b>6,400 U</b> (A).`,`<b>Trois Elles:</b> flexed = 120,000 + 60,000 + 90,000 + 100,000 = <b>370,000</b>; actual 367,000. Variance = <b>3,000 F</b> (A).`,`<b>Young.</b> Variable rate = 135,000/30,000 = <b>4.50 per hour</b> (180,000/40,000 and 225,000/50,000 agree). Fixed 720,000. <b>Y = 4.50 × hours + 720,000</b> (B).`,`<b>At 35,000 hours:</b> 4.50 × 35,000 + 720,000 = 157,500 + 720,000 = <b>$877,500</b> (A).`,`Zin: a flexible budget covers the range of likely activity (78,000, 85,000 and 94,000 hours) (E).`],
+a:'Interspace $8,700 U · Gridiron $6,400 U · Trois Elles $3,000 F · Young Y = 4.50AH + 720,000; $877,500'}
+];
+PROB.P19=[
+{s:'Camelback Communications · Questions 1 to 6 (the case)',q:`Camelback Communications, Inc. (Harvard Business School 9-185-179). The firm uses a single burden rate: (budgeted variable + fixed overhead) / budgeted direct labor hours; standard cost = DL hours × rate + direct labor + material. Direct labor costs $5 an hour. Fixed overhead is 45,000.
+
+Table A: Product Costs (A, B, C, D)
+Material cost: $15.00, $5.00, $10.00, $5.00
+Direct labor: 30.00, 5.00, 15.00, 10.00
+Variable overhead: 15.00, 7.50, 5.00, 7.50
+Variable cost: $60.00, $17.50, $30.00, $22.50
+Fixed cost (equipment line): $10,000, $10,000, $12,500, $12,500
+Lines A and B share identical equipment (1,000 units of A or B); lines C and D likewise.
+Industry selling prices (true cost + 40% mark-on): A $98.00, B $38.50, C $59.50, D $49.00. Mark-on % = profit / cost. CCI drops products with a mark-on below 25%.
+
+Questions
+1. What will CCI now have to charge for each product to make a 40% mark-on? If CCI maintains its rule about dropping products with a mark-on below 25%, which additional products, if any, will it drop?
+2. If you decide to drop additional product(s), recalculate the allocation rate per hour for the new product mix. Repeat Question 1.
+3. What is going on?
+4. What would happen if the firm kept its existing cost system but differentiated between variable and fixed cost and decided to maximize contribution?
+5. What would happen if the firm modified its cost system so that all variable costs were traced to the product accurately but fixed costs were allocated using the existing system?
+6. What would happen if the firm modified its cost system so that it contained two cost pools, one containing the overhead costs associated with Products A and B and the other the overhead costs associated with Products C and D, and then allocated these overhead pools on the basis of direct labor hours?`,
+st:[`<b>Set-up (the case's own table).</b> DL hours per unit = DL / 5: A 6, B 1, C 3, D 2. Start (1,000 each): variable OH 35,000 + fixed 45,000 = 80,000 over 12,000 hours = <b>$6.67 per hour</b>. Standard cost: A 85.00, B 16.67, C 45.00, D 28.33. Mark-ons against industry price: A 15%, B 131%, C 32%, D 73%. A is below 25%, so A is dropped.`,
+`<b>Q1.</b> Drop A; B doubles to 2,000. Variable OH = 15,000 + 5,000 + 7,500 = 27,500 + 45,000 = 72,500 over 7,000 hours = <b>$10.36 per hour</b>. Standard costs: B 20.36, C 56.07, D 35.71 (A 107.14). <b>Prices for 40%:</b> A 150.00, B 28.50, C 78.50, D 50.00. Mark-ons against industry: B 89%, <b>C 6%</b>, D 37%. <b>C is below 25% and is dropped.</b>`,
+`<b>Q2.</b> Drop C; D doubles to 2,000. Variable OH = 15,000 + 15,000 = 30,000 + 45,000 = 75,000 over 6,000 hours = <b>$12.50 per hour</b>. Standard costs: B 22.50, D 40.00. <b>Prices for 40%:</b> B 31.50, D 56.00. Mark-on: B 71%, <b>D 22.5% (below 25%)</b>. D is dropped next. Repeating it leaves only B, with a loss (−3,000).`,
+`<b>Q3. What is going on.</b> A single rate on labour hours loads fixed cost onto labour-heavy products. Each drop shrinks the hours base, so the rate rises (6.67 → 10.36 → 12.50 → 30.00) and the next product looks worse. This is a death spiral. The true economic profit falls: 70,000 with all four, 53,000 after dropping A, 50,000 after dropping A and C. The fixed cost (45,000) never goes away. The true costs are A 70.00, B 27.50, C 42.50, D 35.00. The system overstated A (+15) and C (+2.50) and understated B (−10.83) and D (−6.67).`,
+`<b>Q4. Maximise contribution (separate variable and fixed).</b> CM per unit at industry prices: A 38.00, B 21.00, C 29.50, D 26.50. Each equipment line makes 2,000 units of one product. Best: A on line AB and C on line CD. <b>Make 2,000 A and 2,000 C: revenue 315,000 − variable 180,000 − fixed 45,000 = profit 90,000.</b> That beats 70,000 with the original mix.`,
+`<b>Q5. Variable traced, fixed by DLH.</b> Start: fixed rate 45,000/12,000 = 3.75 per hour. Costs: A 82.50, B 21.25, C 41.25, D 30.00. Mark-ons: A 19% (<25%, dropped), B 81%, C 44%, D 63%. After A: rate 6.43; C 20.7% (dropped). After A and C: rate 7.50; B 54%, D 30.7%. It stops at B 2,000 and D 2,000: profit 50,000. The spiral is shorter, but it still drops products.`,
+`<b>Q6. Two pools (AB and CD) by DLH.</b> Start: pool AB = 10,000 + 10,000 + 15,000 + 7,500 = 42,500 over 7,000 hours = 6.07 per hour. Pool CD = fixed 12,500 + 12,500 + variable OH 5,000 + 7,500 = 37,500 over 5,000 hours (3,000 + 2,000) = 7.50 per hour. Costs: A 81.43, B 16.07, C 47.50, D 30.00. Mark-ons: A 20% (dropped), B 140%, C 25.3%, D 63%. After A out: pool AB = 35,000 over 2,000 hours = 17.50; B costs 27.50 (exact, 40% mark-on 38.50). C 25.3% stays; D 63%. <b>It stabilises with B 2,000, C 1,000, D 1,000: profit 53,000.</b> Dropping A is still a wrong decision, but the spiral stops.`],
+a:'Q1 prices 150 / 28.50 / 78.50 / 50.00, drop C · Q2 rate 12.50, prices B 31.50 / D 56.00, drop D · Q3 death spiral · Q4 A 2,000 + C 2,000, profit 90,000 · Q5 stops at B and D (50,000) · Q6 stops after A (53,000)'}
+];
+
+function probHTML(id){const L=PROB[id]||[];if(!L.length)return `<div class="sec"><div class="lab">Solved numericals</div><div class="txt">No numerical in the slides or problem sets uses this pattern directly. See the table above for where its ideas appear.</div></div>`;
+ return `<div class="sec"><div class="lab">Solved numericals: full question, then the professor's steps (${L.length})</div>${L.map(x=>`<details class="pb"><summary><span class="src">${x.s}</span></summary><div class="qh">Question</div><div class="qbox">${x.q.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div><div class="qh">Solution, step by step</div><ol class="sol">${x.st.map(t=>`<li>${t}</li>`).join('')}</ol><div class="fin">Answer: ${x.a}</div></details>`).join('')}</div>`}
+function openP(id){const p=P.find(x=>x.id===id);const i=P.indexOf(p);
+ $('#sheet').innerHTML=`<div class="sh-h" style="background:${col(p.g)}"><span class="badge" style="background:rgba(255,255,255,.22)">${p.id}</span><h2>${p.n}</h2><button id="cl">Close</button></div><div class="sh-b">
+ <div class="sec plain"><div class="lab">In plain words</div><div class="txt">${p.plain}</div></div>
+ <div class="sec"><div class="lab">Is this the one? Look for these words</div><div class="txt">${p.spot.split(', ').map(w=>`<span class="kw">${w}</span>`).join('')}</div></div>
+ <div class="sec"><div class="lab">Steps in easy words</div><div class="txt"><ol>${p.easy.map(d=>`<li>${d}</li>`).join('')}</ol></div></div>
+ <div class="sec"><div class="lab">When to use which</div><div class="txt">${p.vs}</div></div>
+ ${p.sw?`<div class="sec sw"><div class="lab">Watch out: the formula changes when…</div><div class="txt">${p.sw}</div></div>`:''}
+ <div class="sec"><div class="lab">Mini example with real numbers</div><div class="txt ex">${p.ex}</div></div>
+ <div class="sec"><div class="lab">Where this was used (check your working against these)</div><div class="scroll"><table class="rt"><thead><tr><th>Source</th><th>Numerical</th><th>Answer</th></tr></thead><tbody>${p.refs.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="m">${r[2]}</td></tr>`).join('')}</tbody></table></div></div>
+ ${probHTML(p.id)}
+ <details class="sec"><summary class="lab">Exact formulas as the professor writes them</summary><div class="txt"><p class="m hookf">${p.hook}</p><ol>${p.do.map(d=>`<li>${d}</li>`).join('')}</ol></div></details>
+ <div class="nav"><button class="btn" data-p="${P[(i+P.length-1)%P.length].id}">← ${P[(i+P.length-1)%P.length].id}</button><button class="btn" data-p="${P[(i+1)%P.length].id}">${P[(i+1)%P.length].id} →</button></div></div>`;
+ const d=$('#dlg');if(!d.open)d.showModal();$('#sheet .sh-b').scrollTop=0}
+/* guide */
+const T={
+start:{q:'What is the question asking you to find?',o:[['Cost, profit or stock of a factory (from purchases, wages, stocks)','cost'],['A missing stock, labour or overhead figure','P2'],['How to share overhead between departments','oh'],['Break-even, profit change, price or special order','cvp'],['A budget, cash balance, forecast or variance','bud'],['Fixed vs variable, classify a cost, estimate a cost line','beh'],['The Camelback case','P19']]},
+cost:{q:'What exactly is given and wanted?',o:[['All stocks and costs given; find prime cost, works cost, cost of production or profit','P1'],['Per-unit costs; units sold are different from units made; value of closing stock','P3'],['Quote a price; profit is a % on cost or on selling price','P4'],['Events by day or % finished / % sold; RM, WIP, FG accounts','P6'],['Show a gross-margin or contribution statement','P7']]},
+oh:{q:'What is being shared?',o:[['Factory-wide costs (rent, power, insurance) among departments','P8'],['Service departments (stores, maintenance) into production departments','P9'],['A shared facility among users, or one price for a bundle','P10']]},
+cvp:{q:'What kind of decision?',o:[['Break-even, target profit, tax, margin of safety, leverage','P13'],['Several products or a change in sales mix','P14'],['"What if" price, cost, advertising, commission or volume changes','P15'],['Minimum price, accept an order, spare or scarce capacity','P16'],['Absorption profit vs variable-costing profit','P12']]},
+bud:{q:'Before or after the event?',o:[['Forecast: purchases, production, labour, collections, cash','P17'],['Actual vs budget: flexed budget, variance, favourable or unfavourable','P18']]},
+beh:{q:'What do you need?',o:[['Split a mixed cost using data points (high-low, regression)','P11'],['Name the type of cost, relevant or sunk, value-added','P5']]}};
+let trail=['start'];
+function renderGuide(){const cur=trail[trail.length-1];const isP=/^P\d+$/.test(cur);let h=`<div class="card"><h3>Which pattern is it?</h3><p class="d">Answer one question at a time. You end on the pattern, with its plain-words steps.</p>`;
+ if(trail.length>1)h+=`<div class="crumb">${trail.slice(0,-1).map((k,i)=>`<button class="chip" data-tr="${i}">${k==='start'?'Start':T[k].q.slice(0,28)+'…'}</button>`).join('')}</div>`;
+ if(isP){const p=P.find(x=>x.id===cur);h+=`<div class="res" style="border-color:${col(p.g)}"><span class="badge" style="background:${col(p.g)}">${p.id}</span> <b class="nm">${p.n}</b><p>${p.plain}</p><p class="m hookf">${p.hook}</p><div class="nav"><button class="btn" data-p="${p.id}">Open steps and examples</button><button class="btn" data-tr="0">Start again</button></div></div>`}
+ else{const n=T[cur];h+=`<div class="qn">${n.q}</div><div class="opts">${n.o.map(o=>`<button class="opt" data-go="${o[1]}">${o[0]}</button>`).join('')}</div>`}
+ $('#main').innerHTML=h+'</div>'}
+/* ladder */
+const LD={dmo:0,pur:400,fr:50,ret:25,dmc:225,dl:100,moh:50,wo:0,wc:75,fo:0,fc:50};
+const LL={dmo:'Opening DM',pur:'Purchases',fr:'Freight in',ret:'Returns',dmc:'Closing DM',dl:'Direct labour',moh:'Factory OH',wo:'Opening WIP',wc:'Closing WIP',fo:'Opening FG',fc:'Closing FG'};
+const n=v=>{v=+v;return isNaN(v)?0:v};
+const f=(v,d=2)=>isFinite(v)?(Math.round(v*10**d)/10**d).toLocaleString('en-US',{maximumFractionDigits:d}):'–';
+function ladderCalc(){const v={};for(const k in LD)v[k]=n($('#l_'+k).value);
+ const afu=v.dmo+v.pur+v.fr-v.ret,used=afu-v.dmc,pc=used+v.dl,tmc=pc+v.moh,wafu=tmc+v.wo,cogm=wafu-v.wc,afs=cogm+v.fo,cogs=afs-v.fc;
+ const bx=(l,x,c,op)=>`<div class="bx${c?' res':''}">${op?`<span class="op">${op}</span> `:''}${l}<b>${f(x)}</b></div>`;
+ $('#lout').innerHTML=`<div class="row"><div class="lv">DM</div>${bx('Opening',v.dmo)}${bx('Purchases + freight − returns',v.pur+v.fr-v.ret,0,'+')}${bx('DM AFU',afu,1,'=')}${bx('Closing',v.dmc,0,'−')}${bx('DM used',used,1,'=')}</div>
+ <div class="row"><div class="lv">WIP</div>${bx('Opening WIP',v.wo)}${bx('TMC = DM used + DL + MOH',tmc,1,'+')}${bx('WIP AFU',wafu,1,'=')}${bx('Closing WIP',v.wc,0,'−')}${bx('COGM',cogm,1,'=')}</div>
+ <div class="row"><div class="lv">FG</div>${bx('Opening FG',v.fo)}${bx('COGM',cogm,0,'+')}${bx('FG AFS',afs,1,'=')}${bx('Closing FG',v.fc,0,'−')}${bx('COGS',cogs,1,'=')}</div>
+ <div class="out"><div class="o"><span>Prime cost</span><b>${f(pc)}</b></div><div class="o"><span>Conversion cost (DL + MOH)</span><b>${f(v.dl+v.moh)}</b></div><div class="o"><span>TMC = COP gross</span><b>${f(tmc)}</b></div><div class="o"><span>COGM = COP net</span><b>${f(cogm)}</b></div><div class="o key"><span>COGS</span><b>${f(cogs)}</b></div></div>`}
+function renderLadder(){$('#main').innerHTML=`<div class="card"><h3>Cost ladder</h3><p class="d">The same three steps at every level: opening + added = available, available − closing = used. Change any number; it starts with the Day 3 class example (Day 1: TMC 350, COGM 275, COGS 225). To back-solve (pattern P2), type the answer you know and adjust the unknown box until it matches.</p>
+ <div class="fields">${Object.keys(LD).map(k=>`<div class="fld"><label for="l_${k}">${LL[k]}</label><input id="l_${k}" type="number" inputmode="decimal" value="${LD[k]}"></div>`).join('')}</div>
+ <div class="flow" id="lout"></div><p class="note">Prime cost = DM used + DL. Cost of sales = COGS + admin + selling. Profit = sales − cost of sales.</p></div>`;
+ document.querySelectorAll('#main input').forEach(i=>i.addEventListener('input',ladderCalc));ladderCalc()}
+/* calculators */
+function field(id,l,v){return `<div class="fld"><label for="f_${id}">${l}</label><input id="f_${id}" type="number" inputmode="decimal" step="any" value="${v}"></div>`}
+const val=id=>n($('#f_'+id).value);
+const CALC=[
+{k:'cvp',t:'CVP and break-even (P13)',d:'Preloaded with Tee Times: price 600, variable 400, fixed 50,000, 400 sets, net target 63,000 at 30% tax.',
+ f:[['price','Price / unit',600],['vc','Variable / unit',400],['fc','Fixed cost',50000],['q','Budget units',400],['ni','Target net income',63000],['tax','Tax rate %',30]],
+ r(){const p=val('price'),v=val('vc'),fc=val('fc'),q=val('q'),t=val('tax')/100,ni=val('ni');const cm=p-v,cr=cm/p,be=fc/cm,oi=ni/(1-t),tu=(fc+oi)/cm,ol=cm*q/(cm*q-fc);
+ return [['CM / unit',f(cm)],['CM ratio',f(cr*100)+'%'],['BE units',f(be,1),1],['BE sales',f(fc/cr,0),1],['OI needed (NI ÷ (1−t))',f(oi,0)],['Target units',f(Math.ceil(tu),0),1],['Target sales',f(Math.ceil(tu)*p,0)],['MOS units',f(q-be,1)],['MOS ratio',f((q-be)/q*100)+'%'],['Operating leverage',f(ol)]]}},
+{k:'rec',t:'Reciprocal method (P9)',d:'Preloaded with Set 3 P4: E 2,340 and F 3,000; E gives F 20%, F gives E 10%; E → A 20%, B 25%, C 35%; F → A 25%, B 25%, C 40%.',
+ f:[['e0','E own cost',2340],['f0','F own cost',3000],['a','% E gives to F',20],['b','% F gives to E',10],['ea','E → A %',20],['eb','E → B %',25],['ec','E → C %',35],['fa','F → A %',25],['fb','F → B %',25],['fc2','F → C %',40],['pa','A primary',8000],['pb','B primary',6500],['pc','C primary',7000]],
+ r(){const e0=val('e0'),f0=val('f0'),a=val('a')/100,b=val('b')/100;const E=(e0+b*f0)/(1-a*b),F=f0+a*E;const A=val('pa')+val('ea')/100*E+val('fa')/100*F,B=val('pb')+val('eb')/100*E+val('fb')/100*F,C=val('pc')+val('ec')/100*E+val('fc2')/100*F;
+ return [['E true cost',f(E),1],['F true cost',f(F),1],['A total',f(A),1],['B total',f(B),1],['C total',f(C),1],['Grand total',f(A+B+C)]]}},
+{k:'abs',t:'Absorption vs variable (P12)',d:'Preloaded: 4,000 made, 3,800 sold, fixed MOH 50,000, variable cost 10 per unit.',
+ f:[['pr','Units produced',4000],['so','Units sold',3800],['fm','Fixed MOH',50000],['vv','Variable cost / unit',10]],
+ r(){const pr=val('pr'),so=val('so'),fm=val('fm'),vv=val('vv');const fu=fm/pr;return [['FMOH / unit',f(fu)],['Profit difference (abs − var)',f((pr-so)*fu,2),1],['Closing stock, absorption',f((pr-so)*(vv+fu))],['Closing stock, variable',f((pr-so)*vv)]]}},
+{k:'hl',t:'High-low (P11)',d:'Preloaded with the Day 5 example: low (3, 9) and high (12, 15). Use the lowest and highest activity, not cost.',
+ f:[['xl','Low activity X',3],['yl','Cost at low Y',9],['xh','High activity X',12],['yh','Cost at high Y',15],['xn','Predict at X',8]],
+ r(){const m=(val('yh')-val('yl'))/(val('xh')-val('xl')),b=val('yh')-m*val('xh');return [['m (variable / unit)',f(m,3),1],['b (fixed)',f(b,3),1],['Y at X',f(m*val('xn')+b)]]}},
+{k:'pr',t:'Price from cost (P4)',d:'Preloaded with Set 1 P2: cost 16,275, profit 25% on cost, equal to 20% on selling price.',
+ f:[['co','Total cost',16275],['px','Profit % on cost',25],['py','Profit % on price',20]],
+ r(){const c=val('co');return [['Price (on cost)',f(c*(1+val('px')/100)),1],['Price (on selling price)',f(c/(1-val('py')/100)),1],['x% on cost = y% on price, y =',f(val('px')/(100+val('px'))*100)+'%']]}},
+{k:'stp',t:'Rate or ratio share (P8)',d:'Preloaded with the rent: 10,000 shared by area 1500 : 1100 : 900 : 500.',
+ f:[['cost','Cost',10000],['b1','Base A',1500],['b2','Base B',1100],['b3','Base C',900],['b4','Base D',500]],
+ r(){const t=val('b1')+val('b2')+val('b3')+val('b4'),c=val('cost');return [['Rate per unit of base',f(c/t,4)],['A',f(c*val('b1')/t),1],['B',f(c*val('b2')/t),1],['C',f(c*val('b3')/t),1],['D',f(c*val('b4')/t),1]]}}
+];
+function renderCalc(){$('#main').innerHTML=CALC.map(c=>`<div class="card" id="c_${c.k}"><h3>${c.t}</h3><p class="d">${c.d}</p><div class="fields">${c.f.map(x=>field(x[0],x[1],x[2])).join('')}</div><div class="out" id="o_${c.k}"></div></div>`).join('');
+ const run=()=>CALC.forEach(c=>{$('#o_'+c.k).innerHTML=c.r().map(r=>`<div class="o${r[2]?' key':''}"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')});
+ document.querySelectorAll('#main input').forEach(i=>i.addEventListener('input',run));run()}
+function renderIdx(){$('#main').innerHTML=`<div class="card"><h3>Every numerical, mapped to its pattern</h3><p class="d">Tap a pattern chip to open its steps and solved answers.</p><div class="scroll"><table><thead><tr><th>Numerical</th><th>Where it is</th><th>Pattern</th><th>Key answer</th></tr></thead><tbody>${IDX.map(r=>`<tr><td>${r[0]}</td><td>${WH[r[0]]||''}</td><td>${r[1].split(',').map(id=>{const p=P.find(x=>x.id===id);return `<button class="pl" data-p="${id}" style="background:${col(p.g)}">${id}</button>`}).join('')}</td><td class="m">${r[2]}</td></tr>`).join('')}</tbody></table></div><p class="note">Slide typos to ignore: Savor 3,247 vs 3,263; Example 2 prints 2.9215 (correct 2.9125); Set 1 P1 706,620 vs 706,625; Set 3 P2 Stores 600 / 400; PlayCraft DM 270,000.</p></div>`}
+function render(){$('#finder').hidden=tab!=='map';document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.t===tab));
+ ({guide:renderGuide,map:()=>{renderChips();renderMap()},ladder:renderLadder,calc:renderCalc,index:renderIdx})[tab]()}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-p],[data-c],[data-g],[data-go],[data-tr],#clr,#cl');if(!t)return;
+ if(t.dataset.go){trail.push(t.dataset.go);renderGuide();return}
+ if(t.dataset.tr!==undefined){trail=trail.slice(0,+t.dataset.tr+1);renderGuide();return}
+ if(t.dataset.t){tab=t.dataset.t;render()}
+ else if(t.dataset.p){openP(t.dataset.p)}
+ else if(t.dataset.c){query=query===t.dataset.c?'':t.dataset.c;$('#q').value=query;renderChips();renderMap()}
+ else if(t.dataset.g){grp=grp===t.dataset.g?'':t.dataset.g;renderChips();renderMap()}
+ else if(t.id==='clr'){query='';grp='';$('#q').value='';renderChips();renderMap()}
+ else if(t.id==='cl'){$('#dlg').close()}});
+$('#dlg').addEventListener('click',e=>{if(e.target===$('#dlg'))$('#dlg').close()});
+$('#q').addEventListener('input',e=>{query=e.target.value.trim();renderChips();renderMap()});
+render();
+</script>
+
+</body></html>
